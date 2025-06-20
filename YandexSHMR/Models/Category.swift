@@ -5,7 +5,7 @@
 //  Created by Никита Арабчик on 12.06.2025.
 //
 
-struct Category {
+struct Category: Equatable {
     var id: Int
     var name: String
     var emoji: Character

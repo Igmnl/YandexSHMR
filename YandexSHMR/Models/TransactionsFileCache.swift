@@ -37,7 +37,7 @@ struct TransactionsFileCache {
         try jsonData.write(to: url)
     }
     
-    func loadFromJSONFile(url: URL) throws {
+    mutating func loadFromJSONFile(url: URL) throws {
         guard FileManager.default.fileExists(atPath: url.path()) else {
             throw TransactionsFileCacheError.fileNotFound
         }
@@ -51,9 +51,9 @@ struct TransactionsFileCache {
             throw TransactionsFileCacheError.invalidFormat
         }
         
-        let transactions = jsonObjects.compactMap { jsonObject in
+        self.transactions = jsonObjects.compactMap { jsonObject in
             if let transaction = Transaction.parse(jsonObject: jsonObject) {
-                if !isContains(transaction: transaction) {
+                if !doesContain(transaction: transaction) {
                     return transaction
                 }
             }
@@ -61,7 +61,7 @@ struct TransactionsFileCache {
         }
     }
     
-    private func isContains(transaction: Transaction) -> Bool {
+    private func doesContain(transaction: Transaction) -> Bool {
         if transactions.contains(where: { transaction.id == $0.id }) {
             return true
         }

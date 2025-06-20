@@ -1,0 +1,155 @@
+//
+//  MyHistoryView.swift
+//  YandexSHMR
+//
+//  Created by Никита Арабчик on 19.06.2025.
+//
+
+import SwiftUI
+
+struct MyHistoryView: View {
+    @State private var selectedStartDate = Calendar.current.date(byAdding: .month, value: -1, to: .now) ?? .now
+    @State private var selectedEndDate = Date()
+    @State private var sortSelector = TransactionSortOrder.amountDescending
+    @State private var transactions: [Transaction] = []
+    @State private var isLoading = false
+    
+    let direction: Direction
+    
+    private var sortedTransactions: [Transaction] {
+        transactions.sorted {
+            switch sortSelector {
+            case .dateDescending:
+                return $0.transactionDate > $1.transactionDate
+            case .dateAscending:
+                return $0.transactionDate < $1.transactionDate
+            case .amountDescending:
+                return $0.amount > $1.amount
+            case .amountAscending:
+                return $0.amount < $1.amount
+            }
+        }
+    }
+    var transactionsSum: Decimal {
+        var sum: Decimal = 0
+        for transaction in sortedTransactions {
+            sum += transaction.amount
+        }
+        return sum
+    }
+    var currencyCode: String {
+       transactions.first?.account.currency ?? "RUB"
+    }
+    
+    var body: some View {
+        List {
+            Section {
+                HStack {
+                    Text("Начало")
+                    Spacer()
+                    DatePicker("Дата начала", selection: $selectedStartDate, in: ...Date(), displayedComponents: [.date])
+                        .tint(.accent)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.transactionIconBackground))
+                        .labelsHidden()
+                        .onChange(of: selectedStartDate) { oldValue, newValue in
+                            if newValue > selectedEndDate {
+                                selectedEndDate = newValue
+                            }
+                        }
+                }
+                
+                HStack {
+                    Text("Конец")
+                    Spacer()
+                    DatePicker("Дата конца", selection: $selectedEndDate, in: ...Date(), displayedComponents: [.date])
+                        .tint(.accent)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.transactionIconBackground))
+                        .labelsHidden()
+                        .onChange(of: selectedEndDate) { oldValue, newValue in
+                            if newValue < selectedStartDate {
+                                selectedStartDate = newValue
+                            }
+                        }
+                }
+                
+                HStack {
+                    Text("Сортировка")
+                    Spacer()
+                    Picker("Выбор сортировки", selection: $sortSelector) {
+                        ForEach(TransactionSortOrder.allCases, id: \.self) { sortOrder in
+                            Text(sortOrder.rawValue)
+                                .tag(sortOrder)
+                        }
+                    }
+                    .tint(.secondary)
+                    .labelsHidden()
+                }
+                
+                HStack {
+                    Text("Сумма")
+                    Spacer()
+                    Text(transactionsSum, format:
+                            .currency(code: currencyCode)
+                            .presentation(.narrow)
+                            .precision(.fractionLength(0...2)))
+                }
+                
+            }
+            
+            Section("Операции") {
+                ForEach(sortedTransactions) { transaction in
+                    NavigationLink(destination: Text("")) {
+                        MyHistoryListItemView(transaction: transaction)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Моя история")
+        .toolbar {
+            ToolbarItem {
+                NavigationLink(destination: AnalyzeView()) {
+                    Image(systemName: "document")
+                }
+            }
+        }
+        .overlay {
+            if isLoading {
+                ProgressView()
+            }
+        }
+        .task{
+            await fetchTransactions()
+        }
+    }
+    
+    func fetchTransactions() async {
+        isLoading = true
+        
+        let calendar = Calendar.current
+        let startDate = calendar.startOfDay(for: selectedStartDate)
+        let endDate = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: selectedEndDate) ?? .now
+        do {
+            transactions = try await TransactionService().transactions(startDate: startDate, endDate: endDate)
+            transactions = transactions.filter({ $0.category.direction == direction })
+        } catch {
+            print("Error loading transactions")
+        }
+        
+        isLoading = false
+    }
+    
+    enum TransactionSortOrder: String, CaseIterable {
+        case dateAscending = "Сначала старые"
+        case dateDescending = "Сначала новые"
+        case amountAscending = "По возрастанию"
+        case amountDescending = "По убыванию"
+    }
+}
+
+#Preview {
+    MyHistoryView(direction: .income)
+}
