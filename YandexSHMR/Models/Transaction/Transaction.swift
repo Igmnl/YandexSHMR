@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct Transaction {
+struct Transaction: Identifiable {
     var id: Int
-    var accountId: Int
-    var categoryId: Int
+    var account: BankAccountBrief
+    var category: Category
     var amount: Decimal
     var transactionDate: Date
     var comment: String?

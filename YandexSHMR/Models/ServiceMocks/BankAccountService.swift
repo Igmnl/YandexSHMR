@@ -8,7 +8,7 @@
 import Foundation
 
 final class BankAccountService {
-    private var account = BankAccount(id: 1, userId: 1, name: "Основной счет", balance: 500, currency: "RUB", createdAt: .now, updatedAt: .now)
+    var account = BankAccount(id: 1, userId: 1, name: "Основной счет", balance: 500, currency: "RUB", createdAt: .now, updatedAt: .now)
     
     func bankAccount() async throws -> BankAccount {
         account

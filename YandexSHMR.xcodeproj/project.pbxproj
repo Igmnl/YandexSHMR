@@ -21,9 +21,22 @@
 		CE80A96D2DFCE71B00E3F7EC /* YandexSHMRTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YandexSHMRTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CE35F34B2E04816200FB0AE9 /* Exceptions for "YandexSHMR" folder in "YandexSHMR" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CE80A94A2DFCE6B100E3F7EC /* YandexSHMR */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		CE80A94D2DFCE6B100E3F7EC /* YandexSHMR */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CE35F34B2E04816200FB0AE9 /* Exceptions for "YandexSHMR" folder in "YandexSHMR" target */,
+			);
 			path = YandexSHMR;
 			sourceTree = "<group>";
 		};
@@ -332,6 +345,7 @@
 				DEVELOPMENT_TEAM = 2F56YGM3Y4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = YandexSHMR/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -360,6 +374,7 @@
 				DEVELOPMENT_TEAM = 2F56YGM3Y4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = YandexSHMR/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

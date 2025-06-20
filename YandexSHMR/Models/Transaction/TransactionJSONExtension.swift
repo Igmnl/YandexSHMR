@@ -11,8 +11,8 @@ extension Transaction {
     static func parse(jsonObject: Any) -> Transaction? {
         guard let dictionary = jsonObject as? [String: Any],
               let id = dictionary["id"] as? Int,
-              let accountId = dictionary["accountId"] as? Int,
-              let categoryId = dictionary["categoryId"] as? Int,
+              let account = dictionary["account"] as? BankAccountBrief,
+              let category = dictionary["category"] as? Category,
               let amountString = dictionary["amount"] as? String,
               let amount = Decimal(string: amountString),
               let transactionDateString = dictionary["transactionDate"] as? String,
@@ -32,7 +32,7 @@ extension Transaction {
         }
         
         var transaction: Transaction
-        transaction = Transaction(id: id, accountId: accountId, categoryId: categoryId, amount: amount, transactionDate: transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
+        transaction = Transaction(id: id, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
         
         return transaction
     }
@@ -41,8 +41,8 @@ extension Transaction {
     var jsonObject: Any {
         var dict: [String : Any] =  [
             "id": id,
-            "accountId": accountId,
-            "categoryId": categoryId,
+            "account": account,
+            "category": category,
             "amount": amount.description,
             "transactionDate": Transaction.dateFormatter.string(from: transactionDate),
             "createdAt": Transaction.dateFormatter.string(from: createdAt),
