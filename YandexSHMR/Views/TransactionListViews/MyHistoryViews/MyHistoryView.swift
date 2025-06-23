@@ -57,6 +57,9 @@ struct MyHistoryView: View {
                             if newValue > selectedEndDate {
                                 selectedEndDate = newValue
                             }
+                            Task {
+                                await fetchTransactions()
+                            }
                         }
                 }
                 
@@ -72,6 +75,9 @@ struct MyHistoryView: View {
                         .onChange(of: selectedEndDate) { oldValue, newValue in
                             if newValue < selectedStartDate {
                                 selectedStartDate = newValue
+                            }
+                            Task {
+                                await fetchTransactions()
                             }
                         }
                 }
@@ -121,7 +127,7 @@ struct MyHistoryView: View {
                 ProgressView()
             }
         }
-        .task{
+        .task {
             await fetchTransactions()
         }
     }

@@ -11,11 +11,7 @@ import Foundation
 struct MyHistoryListItemView: View {
     let transaction: Transaction
     
-    var formatedTransactionDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        return formatter.string(from: transaction.transactionDate)
-    }
+
     
     var body: some View {
         HStack {
@@ -47,7 +43,8 @@ struct MyHistoryListItemView: View {
                 )
                 
                 if transaction.transactionDate >= Calendar.current.startOfDay(for: .now) {
-                    Text(formatedTransactionDate)
+                    Text(transaction.formatedTransactionDate)
+                        .font(.system(size: 17))
                 }
             }
         }
