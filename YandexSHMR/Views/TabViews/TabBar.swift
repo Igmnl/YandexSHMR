@@ -11,30 +11,49 @@ struct TabBar: View {
     
     var body: some View {
         TabView {
-            Tab("Расходы", image: "downtrend-7-2") {
-                
+            Tab {
                 ExpensesView()
+            } label: {
+                TabItemLabel(label: "Расходы", imageName: "downtrend-7")
             }
             
-            Tab("Доходы", image: "uptrend-7") {
+            Tab {
                 IncomeView()
+            } label: {
+                TabItemLabel(label: "Доходы", imageName: "uptrend-7")
             }
             
-            Tab("Счет", image: "calculator-7") {
+            Tab {
                 BankAccountView()
+            } label: {
+                TabItemLabel(label: "Счет", imageName: "calculator-7")
             }
             
-            Tab("Статьи", image: "bar-chart-side-7") {
+            Tab {
                 ArticlesView()
+            } label: {
+                TabItemLabel(label: "Статьи", imageName: "icons")
             }
             
-            Tab("Настройки", image: "Vector") {
+            Tab {
                 SettingsView()
+            } label: {
+                TabItemLabel(label: "Настройки", imageName: "Vector")
             }
         }
     }
 }
 
+struct TabItemLabel: View {
+    var label: String
+    var imageName: String
+    
+    var body: some View {
+        Text(label)
+        Image(imageName)
+            .renderingMode(.template)
+    }
+}
 
 #Preview {
     TabBar()

@@ -31,10 +31,7 @@ extension Transaction {
             return nil
         }
         
-        var transaction: Transaction
-        transaction = Transaction(id: id, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
-        
-        return transaction
+        return Transaction(id: id, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
     }
     
     
