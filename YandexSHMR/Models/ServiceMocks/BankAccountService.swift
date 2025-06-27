@@ -17,17 +17,16 @@ final class BankAccountService {
     func changeBankAccount(name: String?, balance: Decimal?, currency: String?) async throws {
         if let name {
             account.name = name
-            account.updatedAt = .now
         }
        
         if let balance {
             account.balance = balance
-            account.updatedAt = .now
         }
         
         if let currency {
             account.currency = currency
-            account.updatedAt = .now
         }
+        
+        account.updatedAt = .now
     }
 }
