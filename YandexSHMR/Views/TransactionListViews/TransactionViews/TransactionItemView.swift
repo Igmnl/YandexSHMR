@@ -37,6 +37,10 @@ struct TransactionItemView: View {
                     .presentation(.narrow)
                     .precision(.fractionLength(0...2))
             )
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.secondary)
         }
         .frame(height: 36)
     }

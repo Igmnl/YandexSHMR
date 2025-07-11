@@ -10,6 +10,9 @@ import SwiftUI
 struct TransactionsListView: View {
     @State private var transactions: [Transaction] = []
     @State private var isLoading = false
+    @State private var selectedTransaction: Transaction?
+    @State private var addTransaction = false
+    var service = TransactionService()
     let direction: Direction
     
     private var sumOfTransactions: Decimal {
@@ -40,11 +43,12 @@ struct TransactionsListView: View {
             Section("Операции") {
                 ForEach(transactions) { transaction in
                     if transaction.category.direction == direction {
-                        NavigationLink{
-                            Text("\(transaction.amount)")
+                        Button {
+                            self.selectedTransaction = transaction
                         } label: {
                             TransactionItemView(transaction: transaction)
                         }
+                        .tint(.primary)
                     }
                 }
             }
@@ -54,9 +58,23 @@ struct TransactionsListView: View {
                 ProgressView()
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            Button() {
+                addTransaction.toggle()
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 56, height: 56)
+            }
+            .padding(.trailing, 16)
+            .padding(.bottom, 20)
+            .accessibilityLabel("Добавить транзакцию")
+            .tint(.accent)
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink(destination: MyHistoryView(direction: direction)) {
+                NavigationLink(destination: MyHistoryView(service: service, direction: direction)) {
                     Image(systemName:"clock")
                         .accessibilityLabel(Text("История"))
                 }
@@ -64,6 +82,22 @@ struct TransactionsListView: View {
         }
         .task {
            await fetchTransactions()
+        }
+        .fullScreenCover(isPresented: $addTransaction) {
+            TransactionCreateView(service: service, direction: direction)
+                .onDisappear {
+                    Task {
+                        await fetchTransactions()
+                    }
+                }
+        }
+        .fullScreenCover(item: $selectedTransaction) { transaction in
+            TransactionEditView(transaction: transaction, service: service)
+                .onDisappear {
+                    Task {
+                        await fetchTransactions()
+                    }
+                }
         }
     }
     
@@ -77,7 +111,7 @@ struct TransactionsListView: View {
         let dayEnd = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: now) ?? .now
         
         do {
-            transactions = try await TransactionService().transactions(startDate: dayStart, endDate: dayEnd)
+            transactions = try await service.transactions(startDate: dayStart, endDate: dayEnd)
             transactions = transactions.filter({ $0.category.direction == direction })
         } catch {
             print("Ошибка загрузки транзакций: \(error)")

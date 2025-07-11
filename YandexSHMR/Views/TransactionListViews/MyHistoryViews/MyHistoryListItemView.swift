@@ -47,6 +47,9 @@ struct MyHistoryListItemView: View {
                         .font(.system(size: 17))
                 }
             }
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.secondary)
         }
         .frame(height: 44)
     }

@@ -12,7 +12,9 @@ struct MyHistoryView: View {
     @State private var selectedEndDate = Date()
     @State private var sortSelector = TransactionSortOrder.amountDescending
     @State private var transactions: [Transaction] = []
+    @State private var selectedTransaction: Transaction?
     @State private var isLoading = false
+    var service: TransactionService
     
     let direction: Direction
     
@@ -38,7 +40,7 @@ struct MyHistoryView: View {
         return sum
     }
     var currencyCode: String {
-       transactions.first?.account.currency ?? "RUB"
+        transactions.first?.account.currency ?? "RUB"
     }
     
     var body: some View {
@@ -108,16 +110,21 @@ struct MyHistoryView: View {
             
             Section("Операции") {
                 ForEach(sortedTransactions) { transaction in
-                    NavigationLink(destination: Text("")) {
+                    Button {
+                        selectedTransaction = transaction
+                    } label: {
                         MyHistoryListItemView(transaction: transaction)
                     }
+                    .tint(.primary)
                 }
             }
         }
         .navigationTitle("Моя история")
         .toolbar {
             ToolbarItem {
-                NavigationLink(destination: AnalyzeView()) {
+                NavigationLink {
+                    HistoryAndAnalyzeView(direction: direction, service: service)
+                } label: {
                     Image(systemName: "document")
                 }
             }
@@ -130,6 +137,14 @@ struct MyHistoryView: View {
         .task {
             await fetchTransactions()
         }
+        .fullScreenCover(item: $selectedTransaction) { transaction in
+            TransactionEditView(transaction: transaction, service: service)
+                .onDisappear {
+                    Task {
+                        await fetchTransactions()
+                    }
+                }
+        }
     }
     
     func fetchTransactions() async {
@@ -139,7 +154,7 @@ struct MyHistoryView: View {
         let startDate = calendar.startOfDay(for: selectedStartDate)
         let endDate = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: selectedEndDate) ?? .now
         do {
-            transactions = try await TransactionService().transactions(startDate: startDate, endDate: endDate)
+            transactions = try await service.transactions(startDate: startDate, endDate: endDate)
             transactions = transactions.filter({ $0.category.direction == direction })
         } catch {
             print("Error loading transactions")
@@ -147,15 +162,15 @@ struct MyHistoryView: View {
         
         isLoading = false
     }
-    
-    enum TransactionSortOrder: String, CaseIterable {
-        case dateAscending = "Сначала старые"
-        case dateDescending = "Сначала новые"
-        case amountAscending = "По возрастанию"
-        case amountDescending = "По убыванию"
-    }
+}
+
+enum TransactionSortOrder: String, CaseIterable {
+    case dateAscending = "Сначала старые"
+    case dateDescending = "Сначала новые"
+    case amountAscending = "По возрастанию"
+    case amountDescending = "По убыванию"
 }
 
 #Preview {
-    MyHistoryView(direction: .income)
+    MyHistoryView(service: TransactionService(), direction: .income)
 }

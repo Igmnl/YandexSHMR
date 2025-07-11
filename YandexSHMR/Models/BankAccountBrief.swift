@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct BankAccountBrief: Equatable {
+struct BankAccountBrief: Equatable, Hashable {
     var id: Int
     var name: String
     var balance: Decimal

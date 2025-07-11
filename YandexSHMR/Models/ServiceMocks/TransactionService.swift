@@ -42,8 +42,8 @@ final class TransactionService {
         }
     }
     
-    func createTransaction(id: Int, account: BankAccountBrief, category: Category, amount: Decimal, transactionDate: Date, comment: String? = nil) async throws {
-        let transaction = Transaction(id: id, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment,  createdAt: .now, updatedAt: .now)
+    func createTransaction(account: BankAccountBrief, category: Category, amount: Decimal, transactionDate: Date, comment: String? = nil) async throws {
+        let transaction = Transaction(id: (transactions.last?.id ?? 0) + 1, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment,  createdAt: .now, updatedAt: .now)
         transactions.append(transaction)
     }
     
