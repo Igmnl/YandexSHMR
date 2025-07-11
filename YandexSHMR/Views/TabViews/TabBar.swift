@@ -13,30 +13,36 @@ struct TabBar: View {
         TabView {
             Tab {
                 ExpensesView()
+                    .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Расходы", imageName: "downtrend-7")
             }
+           
             
             Tab {
                 IncomeView()
+                    .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Доходы", imageName: "uptrend-7")
             }
             
             Tab {
                 BankAccountView()
+                    .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Счет", imageName: "calculator-7")
             }
             
             Tab {
                 ArticlesView()
+                    .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Статьи", imageName: "icons")
             }
             
             Tab {
                 SettingsView()
+                    .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Настройки", imageName: "Vector")
             }

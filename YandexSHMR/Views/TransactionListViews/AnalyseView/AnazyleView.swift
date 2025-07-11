@@ -14,12 +14,24 @@ final class AnalyzeViewController: UITableViewController {
     private var endDate = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: .now) ?? .now
     private var totalAmount: Decimal = 0
     private var sortOrder: TransactionSortOrder = .amountAscending
+    weak var coordinator: AnalyzeCoordinator?
     var direction: Direction = .income
+    var service: TransactionService = TransactionService()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
         loadTransactions()
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard indexPath.section == 1 else { return }
+        let transaction = transactions[indexPath.row]
+        coordinator?.selectedTransaction = transaction
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
     }
     
     private func setupTableView() {
@@ -29,7 +41,7 @@ final class AnalyzeViewController: UITableViewController {
         tableView.register(PickerCell.self, forCellReuseIdentifier: PickerCell.reuseId)
         tableView.refreshControl = UIRefreshControl()
         tableView.refreshControl?.addTarget(self, action: #selector(loadTransactions), for: .valueChanged)
-        tableView.allowsSelection = false
+        tableView.allowsSelection = true
     }
     
     private func sortTransactions() {
@@ -50,7 +62,7 @@ final class AnalyzeViewController: UITableViewController {
     @objc func loadTransactions() {
         Task {
             do {
-                let mockTransactions = try await TransactionService().transactions(period: startDate...endDate)
+                let mockTransactions = try await service.transactions(period: startDate...endDate)
                 
                 transactions = mockTransactions.filter({ $0.category.direction == direction})
                 totalAmount = transactions.reduce(0) { $0 + $1.amount }
@@ -170,6 +182,8 @@ final class DatePickerCell: UITableViewCell {
         picker.preferredDatePickerStyle = .compact
         picker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
         picker.maximumDate = Date()
+        picker.tintColor = .accent
+        
         return picker
     }()
     
@@ -230,11 +244,11 @@ final class TextCell: UITableViewCell {
 
 final class PickerCell: UITableViewCell {
     static let reuseId = "PickerCell"
-
+    
     private var onSelectionChanged: ((Int) -> Void)?
     private var options: [String] = []
     private var selectedIndex: Int = 0
-
+    
     private lazy var menuButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Выбрать", for: .normal)
@@ -244,17 +258,17 @@ final class PickerCell: UITableViewCell {
         button.sizeToFit()
         return button
     }()
-
-
+    
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .value1, reuseIdentifier: reuseIdentifier)
         accessoryView = menuButton
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     func configure(
         title: String,
         sortOrder: TransactionSortOrder,
@@ -262,12 +276,12 @@ final class PickerCell: UITableViewCell {
     ) {
         textLabel?.text = title
         self.options = TransactionSortOrder.allCases.map { $0.rawValue }
-
+        
         let selected = TransactionSortOrder.allCases.firstIndex(of: sortOrder) ?? 0
         self.selectedIndex = selected
-
+        
         menuButton.setTitle(options[selected], for: .normal)
-
+        
         self.onSelectionChanged = { index in
             onSelectionChanged(TransactionSortOrder.allCases[index])
         }
@@ -276,8 +290,8 @@ final class PickerCell: UITableViewCell {
         menuButton.tintColor = .secondaryLabel
         menuButton.sizeToFit()
         accessoryView = menuButton
-
-
+        
+        
         menuButton.menu = UIMenu(children: options.enumerated().map { index, option in
             UIAction(title: option, state: index == selected ? .on : .off) { [weak self] _ in
                 self?.selectedIndex = index
@@ -287,7 +301,7 @@ final class PickerCell: UITableViewCell {
             }
         })
     }
-
+    
     private func updateMenuSelection() {
         guard menuButton.menu != nil else { return }
         let updatedMenu = UIMenu(children: options.enumerated().map { index, option in
@@ -413,7 +427,7 @@ final class TransactionCell: UITableViewCell {
             iconContainer.heightAnchor.constraint(equalToConstant: 24)
         ])
     }
-
+    
     func configure(emoji: Character, title: String, comment: String, amount: String, percentage: String) {
         iconLabel.text = String(emoji)
         titleLabel.text = title
@@ -423,26 +437,27 @@ final class TransactionCell: UITableViewCell {
     }
 }
 
+protocol AnalyzeViewControllerDelegate: AnyObject {
+    func didSelectTransaction(_ transaction: Transaction)
+}
 
 struct AnalyzeView: UIViewControllerRepresentable {
     let direction: Direction
+    let service: TransactionService
+    let coordinator: AnalyzeCoordinator
     
     func makeUIViewController(context: Context) -> AnalyzeViewController {
         let controller = AnalyzeViewController(style: .insetGrouped)
         controller.direction = direction
+        controller.service = service
+        controller.coordinator = coordinator
         return controller
     }
     
     func updateUIViewController(_ uiViewController: AnalyzeViewController, context: Context) {
         uiViewController.direction = direction
-        uiViewController.loadTransactions()
+        uiViewController.service = service
     }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-    
-    class Coordinator {}
 }
 
 extension AnalyzeView {
