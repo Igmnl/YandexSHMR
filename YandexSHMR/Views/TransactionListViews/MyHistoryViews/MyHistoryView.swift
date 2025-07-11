@@ -117,7 +117,13 @@ struct MyHistoryView: View {
         .navigationTitle("Моя история")
         .toolbar {
             ToolbarItem {
-                NavigationLink(destination: AnalyzeView()) {
+                NavigationLink {
+                    NavigationStack {
+                        AnalyzeView(direction: direction)
+                            .navigationTitle("Анализ")
+                            .edgesIgnoringSafeArea(.all)
+                    }
+                } label:{
                     Image(systemName: "document")
                 }
             }
@@ -147,13 +153,13 @@ struct MyHistoryView: View {
         
         isLoading = false
     }
-    
-    enum TransactionSortOrder: String, CaseIterable {
-        case dateAscending = "Сначала старые"
-        case dateDescending = "Сначала новые"
-        case amountAscending = "По возрастанию"
-        case amountDescending = "По убыванию"
-    }
+}
+
+enum TransactionSortOrder: String, CaseIterable {
+    case dateAscending = "Сначала старые"
+    case dateDescending = "Сначала новые"
+    case amountAscending = "По возрастанию"
+    case amountDescending = "По убыванию"
 }
 
 #Preview {
