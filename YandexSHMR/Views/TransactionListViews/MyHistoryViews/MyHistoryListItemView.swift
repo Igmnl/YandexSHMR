@@ -54,8 +54,3 @@ struct MyHistoryListItemView: View {
         .frame(height: 44)
     }
 }
-
-#Preview {
-    let transaction = TransactionService().transactions[2]
-    MyHistoryListItemView(transaction: transaction)
-}

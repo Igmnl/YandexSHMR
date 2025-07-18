@@ -11,6 +11,8 @@ struct ArticlesView: View {
     @State private var loadingState = LoadingState.loading
     @State private var categories: [Category] = []
     @State private var searchText = ""
+    @State private var showAlert = false
+    @State private var alertError = ""
     
     var searchedCategories: [Category] {
         guard !searchText.isEmpty else {
@@ -55,6 +57,9 @@ struct ArticlesView: View {
                         .padding(.bottom, 60)
                 }
             }
+            .alert("Ошибка!", isPresented: $showAlert) {} message: {
+                Text(alertError)
+            }
         }
         .searchable(text: $searchText, prompt: "Search")
     }
@@ -65,16 +70,19 @@ struct ArticlesView: View {
             categories = try await CategoriesService().categories()
             loadingState = .loaded
         } catch {
-            print("Error loading categories: \(error.localizedDescription)")
             loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
+            print("Error loading categories: \(error.localizedDescription)")
         }
     }
     
-    enum LoadingState {
-        case loading
-        case loaded
-        case error
-    }
+}
+
+enum LoadingState {
+    case loading
+    case loaded
+    case error
 }
 
 #Preview {

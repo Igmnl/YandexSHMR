@@ -9,12 +9,7 @@ import Foundation
 
 final class CategoriesService {
     func categories() async throws -> [Category] {
-        [
-            Category(id: 1, name: "Зарплата", emoji: "💰", isIncome: true),
-            Category(id: 2, name: "Премия", emoji: "💵", isIncome: true),
-            Category(id: 3, name: "Транспорт", emoji: "🚌", isIncome: false),
-            Category(id: 4, name: "Еда", emoji: "🍔", isIncome: false),
-        ]
+        try await NetworkClient.shared.requets(method: .get, path: "/categories")
     }
     
     func categories(for direction: Direction) async throws -> [Category] {

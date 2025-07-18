@@ -13,7 +13,9 @@ struct MyHistoryView: View {
     @State private var sortSelector = TransactionSortOrder.amountDescending
     @State private var transactions: [Transaction] = []
     @State private var selectedTransaction: Transaction?
-    @State private var isLoading = false
+    @State private var loadingState = LoadingState.loading
+    @State private var showAlert = false
+    @State private var alertError = ""
     var service: TransactionService
     
     let direction: Direction
@@ -130,7 +132,7 @@ struct MyHistoryView: View {
             }
         }
         .overlay {
-            if isLoading {
+            if loadingState == .loading {
                 ProgressView()
             }
         }
@@ -145,22 +147,27 @@ struct MyHistoryView: View {
                     }
                 }
         }
+        .alert("Ошибка!", isPresented: $showAlert) {} message: {
+            Text(alertError)
+        }
     }
     
     func fetchTransactions() async {
-        isLoading = true
-        
+        loadingState = .loading
         let calendar = Calendar.current
         let startDate = calendar.startOfDay(for: selectedStartDate)
         let endDate = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: selectedEndDate) ?? .now
         do {
-            transactions = try await service.transactions(startDate: startDate, endDate: endDate)
+            let account = try await BankAccountService().bankAccount()
+            transactions = try await service.transactions(accountId: account.id, startDate: startDate, endDate: endDate)
             transactions = transactions.filter({ $0.category.direction == direction })
+            loadingState = .loaded
         } catch {
-            print("Error loading transactions")
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
+            print("Error loading transactions in history: \(error.localizedDescription)")
         }
-        
-        isLoading = false
     }
 }
 

@@ -13,6 +13,9 @@ struct TransactionCreateView: View {
     @State private var categories: [Category] = []
     @State private var isValid = false
     @FocusState private var isFocused: Bool
+    @State private var loadingState = LoadingState.loading
+    @State private var showAlert = false
+    @State private var alertError = ""
     private var maxLength = 30
     var service: TransactionService
     
@@ -109,6 +112,9 @@ struct TransactionCreateView: View {
             .alert("Заполните все поля", isPresented: $isValid) {
                 Button("Готово") {}
             }
+            .alert("Ошибка!", isPresented: $showAlert) {} message: {
+                Text(alertError)
+            }
         }
     }
     
@@ -121,20 +127,28 @@ struct TransactionCreateView: View {
             self.categories = categories
             self.transaction = Transaction(id: 0, account: bankAccountBrief, category: categories.first ?? Category(id: 0, name: "", emoji: "N", isIncome: transaction.category.isIncome), amount: 0, transactionDate: .now, createdAt: .now, updatedAt: .now)
         } catch {
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
             print("Error initialization: \(error.localizedDescription)")
         }
     }
     
     private func createTransaction() async {
+        loadingState = .loading
         do {
             let bankAccount = try await BankAccountService().bankAccount()
             
             let bankAccountBrief  = BankAccountBrief(id: bankAccount.id, name: bankAccount.name, balance: bankAccount.balance, currency: bankAccount.currency)
+            let transaction = Transaction(id: 1, account: bankAccountBrief, category: transaction.category, amount: transaction.amount, transactionDate: transaction.transactionDate, createdAt: Date(), updatedAt: Date())
             
-            try await service.createTransaction(account: bankAccountBrief, category: transaction.category, amount: transaction.amount, transactionDate: transaction.transactionDate, comment: transaction.comment)
-            
+            try await service.createTransaction(transaction: transaction)
+            loadingState = .loaded
             dismiss()
         } catch {
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
             print("Saving transaction error: \(error.localizedDescription)")
         }
     }

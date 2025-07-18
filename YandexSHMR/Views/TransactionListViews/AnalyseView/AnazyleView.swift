@@ -62,7 +62,8 @@ final class AnalyzeViewController: UITableViewController {
     @objc func loadTransactions() {
         Task {
             do {
-                let mockTransactions = try await service.transactions(period: startDate...endDate)
+                let account = try await BankAccountService().bankAccount()
+                let mockTransactions = try await service.transactions(accountId: account.id, startDate: startDate, endDate: endDate)
                 
                 transactions = mockTransactions.filter({ $0.category.direction == direction})
                 totalAmount = transactions.reduce(0) { $0 + $1.amount }
