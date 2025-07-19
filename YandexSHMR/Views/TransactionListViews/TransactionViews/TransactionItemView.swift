@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TransactionItemView: View {
-    let transaction: Transaction
+    let transaction: TransactionResponse
     
     var body: some View {
         HStack {
@@ -24,7 +24,7 @@ struct TransactionItemView: View {
                 Text(transaction.category.name)
                     .font(.system(size: 17))
                 
-                if let comment = transaction.comment {
+                if let comment = transaction.comment, comment != "" {
                     Text(comment)
                         .foregroundStyle(.secondary)
                         .font(.system(size: 13))
@@ -44,10 +44,4 @@ struct TransactionItemView: View {
         }
         .frame(height: 36)
     }
-}
-
-#Preview {
-    let transactions = TransactionService().transactions
-    TransactionItemView(transaction: transactions[0])
-        
 }

@@ -7,17 +7,17 @@
 
 import Foundation
 
-extension Transaction {
+extension TransactionResponse {
     var csvObject: String {
-        let transactionDate = Transaction.dateFormatter.string(from: transactionDate)
-        let createdAt = Transaction.dateFormatter.string(from: createdAt)
-        let updatedAt = Transaction.dateFormatter.string(from: updatedAt)
+        let transactionDate = TransactionResponse.dateFormatter.string(from: transactionDate)
+        let createdAt = TransactionResponse.dateFormatter.string(from: createdAt)
+        let updatedAt = TransactionResponse.dateFormatter.string(from: updatedAt)
         let accountString = "\(account.id),\(account.name),\(account.balance),\(account.currency)"
         let categoryString = "\(category.id),\(category.name),\(category.emoji),\(category.isIncome)"
         return "\(id),\(accountString),\(categoryString),\(amount.description),\(transactionDate),\(comment ?? ""),\(createdAt),\(updatedAt)"
     }
     
-    static func parseCsv(csv: String) -> Transaction? {
+    static func parseCsv(csv: String) -> TransactionResponse? {
         let components = csv.components(separatedBy: ",")
         
         guard let accountId = Int(components[1].trimmingCharacters(in: .whitespaces)),
@@ -47,7 +47,7 @@ extension Transaction {
         
         let comment = components[11].isEmpty ? nil : components[5].trimmingCharacters(in: .whitespaces)
         
-        let transaction = Transaction(id: id, account: bankAccount, category: category, amount: amount, transactionDate:transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
+        let transaction = TransactionResponse(id: id, account: bankAccount, category: category, amount: amount, transactionDate:transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
         
         return transaction
         

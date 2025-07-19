@@ -6,66 +6,281 @@
 //
 
 import Foundation
-
+import SwiftData
 
 final class TransactionService {
-    let categories = [
-        Category(id: 1, name: "Зарплата", emoji: "💰", isIncome: true),
-        Category(id: 2, name: "Премия", emoji: "💵", isIncome: true),
-        Category(id: 3, name: "Транспорт", emoji: "🚌", isIncome: false),
-        Category(id: 4, name: "Еда", emoji: "🍔", isIncome: false),
-    ]
-    
-    let bankAccount = BankAccountBrief(id: 1, name: "Леха", balance: 500.00, currency: "RUB")
-    
-    var transactions: [Transaction] = []
+    private let networkClient: NetworkClient
+    private let localStorage: SwiftDataTransactionStorage
+    private let backupStorage: SwiftDataBackupStorage
+    private let accountService: BankAccountService
     
     
-    init() {
-        self.transactions = [
-            Transaction(id: 1, account: bankAccount, category: categories[0], amount: 500000.00, transactionDate: Date.now, comment: "Pensil", createdAt: .now, updatedAt: .now),
-            Transaction(id: 2, account: bankAccount, category: categories[1], amount: 200.00, transactionDate: .now, createdAt: .now, updatedAt: .now),
-            Transaction(id: 3, account: bankAccount, category: categories[2], amount: 100.00, transactionDate: .now.advanced(by: -1000), createdAt: .now, updatedAt: .now),
-            Transaction(id: 4, account: bankAccount, category: categories[3], amount: 40000.00, transactionDate: .now.advanced(by: 60), createdAt: .now, updatedAt: .now),
-        ]
+    init(
+        networkClient: NetworkClient = .shared,
+        localStorage: SwiftDataTransactionStorage = SwiftDataTransactionStorage(),
+        backupStorage: SwiftDataBackupStorage = SwiftDataBackupStorage(),
+        accountService: BankAccountService = .init()
+    ) {
+        self.networkClient = networkClient
+        self.localStorage = localStorage
+        self.backupStorage = backupStorage
+        self.accountService = accountService
     }
     
-    func transactions(period: ClosedRange<Date>) async throws -> [Transaction] {
-        transactions.filter { transaction in
-            period.contains(transaction.transactionDate)
+    func initialSync() async {
+        do {
+            try await syncPendingOperations()
+        } catch {
+            print("Initial sync failed: \(error)")
         }
     }
     
-    func transactions(startDate: Date, endDate: Date) async throws -> [Transaction] {
-        transactions.filter {
-            $0.transactionDate >= startDate && $0.transactionDate <= endDate
+    func transactions(accountId: Int, startDate: Date, endDate: Date) async throws -> [TransactionResponse] {
+        try? await syncPendingOperations()
+        
+        do {
+            let remote = try await fetchRemoteTransactions(accountId: accountId, startDate: startDate, endDate: endDate)
+            try await localStorage.saveTransactions(remote, forPeriod: startDate, endDate: endDate)
+            return remote
+        } catch {
+            let local = try await localStorage.getTransactions(for: accountId, startDate: startDate, endDate: endDate)
+            let pendingOps = try await backupStorage.getPendingOperations()
+            
+            let merged = mergeTransactions(local: local, pending: pendingOps, accountId: accountId, startDate: startDate, endDate: endDate)
+
+            return merged
+        }
+    }
+
+    private func mergeAllTransactions(
+        local: [TransactionResponse],
+        pending: [TransactionResponse],
+        accountId: Int,
+        startDate: Date,
+        endDate: Date
+    ) -> [TransactionResponse] {
+        let filteredPending = pending.filter {
+            $0.account.id == accountId &&
+            $0.transactionDate >= startDate &&
+            $0.transactionDate <= endDate
+        }
+        var allTransactions = local + filteredPending
+        allTransactions = allTransactions.unique(by: \.id)
+        return allTransactions.sorted { $0.transactionDate > $1.transactionDate }
+    }
+    
+    func createTransaction(transaction: TransactionResponse) async throws {
+        do {
+            let createdTransaction = try await performCreateTransaction(transaction)
+            try await localStorage.createTransaction(createdTransaction)
+            try await backupStorage.removePendingOperations([transaction.id])
+        } catch {
+            let operation = PendingTransactionOperation(
+                operationType: .create,
+                transaction: transaction
+            )
+            try await backupStorage.addPendingOperation(operation)
+            throw error
         }
     }
     
-    func createTransaction(account: BankAccountBrief, category: Category, amount: Decimal, transactionDate: Date, comment: String? = nil) async throws {
-        let transaction = Transaction(id: (transactions.last?.id ?? 0) + 1, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment,  createdAt: .now, updatedAt: .now)
-        transactions.append(transaction)
+    func updateTransaction(transaction: TransactionResponse) async throws {
+        do {
+            let updatedTransaction = try await performUpdateTransaction(transaction)
+            try await localStorage.updateTransaction(updatedTransaction)
+            try await backupStorage.removePendingOperations([transaction.id])
+        } catch {
+            let operation = PendingTransactionOperation(
+                operationType: .update,
+                transaction: transaction
+            )
+            try await backupStorage.addPendingOperation(operation)
+            throw error
+        }
     }
     
-    func updateTransaction(transaction: Transaction) async throws {
-        if let position = transactions.firstIndex(where: {$0.id == transaction.id}) {
-            transactions[position] = transaction
-            transactions[position].updatedAt = .now
-        } else {
-            throw TransactionServiceError.transactionNotFound
+    func deleteTransaction(transactionId: Int) async throws {
+        do {
+            try await performDeleteTransaction(transactionId)
+            try await localStorage.deleteTransaction(id: transactionId)
+            try await backupStorage.removePendingOperations([transactionId])
+        } catch {
+            guard let localTransaction = try? await localStorage.getTransaction(id: transactionId) else {
+                throw TransactionServiceError.transactionNotFound
+            }
+            
+            let operation = PendingTransactionOperation(
+                operationType: .delete,
+                transaction: localTransaction
+            )
+            try await backupStorage.addPendingOperation(operation)
+            throw error
+        }
+    }
+    
+    private func mergeTransactions(
+        local: [TransactionResponse],
+        pending: [PendingTransactionOperation],
+        accountId: Int,
+        startDate: Date,
+        endDate: Date
+    ) -> [TransactionResponse] {
+        let relevantPending = pending.filter { op in
+            let tx = op.transaction
+            return tx.account.id == accountId &&
+                   tx.transactionDate >= startDate &&
+                   tx.transactionDate <= endDate
         }
         
+        var createOrUpdateOps = [TransactionResponse]()
+        var deleteIds = Set<Int>()
+        
+        for op in relevantPending {
+            switch op.operationType {
+            case .create, .update:
+                createOrUpdateOps.append(op.transaction)
+            case .delete:
+                deleteIds.insert(op.id)
+            }
+        }
+        
+        let filteredLocal = local.filter { !deleteIds.contains($0.id) }
+        
+        let allTransactions = (filteredLocal + createOrUpdateOps).reduce(into: [Int: TransactionResponse]()) { result, tx in
+            result[tx.id] = tx
+        }.values
+        
+        return Array(allTransactions).sorted { $0.transactionDate > $1.transactionDate }
     }
     
-    func deleteTransaction(id: Int) async throws {
-        if let position = transactions.firstIndex(where: {$0.id == id}) {
-            transactions.remove(at: position)
-        } else {
-            throw TransactionServiceError.transactionNotFound
+    private func syncPendingOperations() async throws {
+        let pendingOperations = try await backupStorage.getPendingOperations()
+        
+        for operation in pendingOperations {
+            do {
+                switch operation.operationType {
+                case .create:
+                    _ = try await performCreateTransaction(operation.transaction)
+                case .update:
+                    _ = try await performUpdateTransaction(operation.transaction)
+                case .delete:
+                    try await performDeleteTransaction(operation.id)
+                }
+                try await backupStorage.removePendingOperations([operation.id])
+            } catch {
+                continue
+            }
         }
+    }
+    
+    private func fetchRemoteTransactions(
+        accountId: Int,
+        startDate: Date,
+        endDate: Date
+    ) async throws -> [TransactionResponse] {
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.timeZone = .current
+        dateFormatter.formatOptions = [.withFullDate]
+        
+        let startDateStr = dateFormatter.string(from: startDate)
+        let endDateStr = dateFormatter.string(from: endDate)
+        
+        return try await networkClient.requets(
+            method: .get,
+            path: "/transactions/account/\(accountId)/period?startDate=\(startDateStr)&endDate=\(endDateStr)"
+        )
+    }
+    
+    private func performCreateTransaction(_ transaction: TransactionResponse) async throws -> TransactionResponse {
+        let formatedDate = TransactionResponse.dateFormatter.string(from: transaction.transactionDate)
+        let newTransaction = TransactionRequest(
+            accountId: transaction.account.id,
+            categoryId: transaction.category.id,
+            amount: transaction.amount.description,
+            transactionDate: formatedDate,
+            comment: transaction.comment ?? ""
+        )
+        
+        let created: Transaction = try await networkClient.requets(
+            method: .post,
+            path: "/transactions",
+            body: newTransaction
+        )
+        
+        return TransactionResponse(
+            id: created.id,
+            account: transaction.account,
+            category: transaction.category,
+            amount: created.amount,
+            transactionDate: created.transactionDate,
+            comment: created.comment,
+            createdAt: created.createdAt,
+            updatedAt: created.updatedAt
+        )
+    }
+    
+    private func performUpdateTransaction(_ transaction: TransactionResponse) async throws -> TransactionResponse {
+        let formatedDate = TransactionResponse.dateFormatter.string(from: transaction.transactionDate)
+        let updateRequest = TransactionRequest(
+            accountId: transaction.account.id,
+            categoryId: transaction.category.id,
+            amount: transaction.amount.description,
+            transactionDate: formatedDate,
+            comment: transaction.comment ?? ""
+        )
+        
+        return try await networkClient.requets(
+            method: .put,
+            path: "/transactions/\(transaction.id)",
+            body: updateRequest
+        )
+    }
+    
+    private func performDeleteTransaction(_ transactionId: Int) async throws {
+        let _: DecodableStub = try await networkClient.requets(
+            method: .delete,
+            path: "/transactions/\(transactionId)"
+        )
+    }
+    
+    private func getLocalTransactions(
+        accountId: Int,
+        startDate: Date,
+        endDate: Date
+    ) async throws -> [TransactionResponse] {
+        let localTransactions = try await localStorage.getTransactions(
+            for: accountId,
+            startDate: startDate,
+            endDate: endDate
+        )
+        
+        let pendingOperations = try await backupStorage.getPendingOperations()
+        let pendingTransactions = pendingOperations.map { $0.transaction }
+        
+        let filteredPending = pendingTransactions.filter {
+            $0.account.id == accountId &&
+            $0.transactionDate >= startDate &&
+            $0.transactionDate <= endDate
+        }
+        
+        var allTransactions = localTransactions + filteredPending
+        allTransactions = allTransactions.unique(by: \.id)
+        
+        return allTransactions.sorted { $0.transactionDate > $1.transactionDate }
     }
     
     enum TransactionServiceError: Error {
         case transactionNotFound
+        case deletionFailed(reason: String)
+        case syncFailed
     }
 }
+
+extension Sequence {
+    func unique<T: Hashable>(by keyPath: KeyPath<Element, T>) -> [Element] {
+        var seen = Set<T>()
+        return filter { seen.insert($0[keyPath: keyPath]).inserted }
+    }
+}
+
+struct DecodableStub: Decodable {}

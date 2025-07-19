@@ -10,6 +10,9 @@ import SwiftUI
 struct BankAccountEditView: View {
     @State private var currency: String
     @State private var balance: Decimal
+    @State private var showAlert = false
+    @State private var alertError = ""
+    @State private var loadingState = LoadingState.loaded
     
     @State private var showingConfirmationDialog = false
     @FocusState private var isFocused: Bool
@@ -59,6 +62,11 @@ struct BankAccountEditView: View {
                 .tint(.primary)
             }
         }
+        .overlay {
+            if loadingState == .loading {
+                ProgressView()
+            }
+        }
         .gesture(
             DragGesture(minimumDistance: 1, coordinateSpace: .global)
             .onEnded { _ in
@@ -91,13 +99,22 @@ struct BankAccountEditView: View {
                 }
             }
         }
+        .alert("Ошибка!", isPresented: $showAlert) {} message: {
+            Text(alertError)
+        }
     }
     
     func saveChanges() async {
+        loadingState = .loading
         do {
-            try await bankAccountService.changeBankAccount(name: nil, balance: balance, currency: currency)
+            let account = try await bankAccountService.bankAccount()
+            try await bankAccountService.changeBankAccount(id: account.id, name: account.name, balance: balance, currency: currency)
+            loadingState = .loaded
         } catch {
-              print("Error saving changes, \(error)")
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
+            print("Error loading categories: \(error.localizedDescription)")
         }
     }
     
@@ -110,7 +127,3 @@ struct BankAccountEditView: View {
     }
 }
 
-#Preview {
-    @Previewable @State var isEditing = false
-    BankAccountEditView(bankAccountService: BankAccountService(), bankAccount: BankAccountService().account, isEditing: $isEditing)
-}

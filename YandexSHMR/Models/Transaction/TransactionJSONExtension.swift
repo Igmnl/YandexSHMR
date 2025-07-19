@@ -7,8 +7,8 @@
 
 import Foundation
 
-extension Transaction {
-    static func parse(jsonObject: Any) -> Transaction? {
+extension TransactionResponse {
+    static func parse(jsonObject: Any) -> TransactionResponse? {
         guard let dictionary = jsonObject as? [String: Any],
               let id = dictionary["id"] as? Int,
               let account = dictionary["account"] as? BankAccountBrief,
@@ -31,7 +31,7 @@ extension Transaction {
             return nil
         }
         
-        return Transaction(id: id, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
+        return TransactionResponse(id: id, account: account, category: category, amount: amount, transactionDate: transactionDate, comment: comment, createdAt: createdAt, updatedAt: updatedAt)
     }
     
     
@@ -41,9 +41,9 @@ extension Transaction {
             "account": account,
             "category": category,
             "amount": amount.description,
-            "transactionDate": Transaction.dateFormatter.string(from: transactionDate),
-            "createdAt": Transaction.dateFormatter.string(from: createdAt),
-            "updatedAt": Transaction.dateFormatter.string(from: updatedAt)
+            "transactionDate": TransactionResponse.dateFormatter.string(from: transactionDate),
+            "createdAt": TransactionResponse.dateFormatter.string(from: createdAt),
+            "updatedAt": TransactionResponse.dateFormatter.string(from: updatedAt)
         ]
         
         if let comment {
