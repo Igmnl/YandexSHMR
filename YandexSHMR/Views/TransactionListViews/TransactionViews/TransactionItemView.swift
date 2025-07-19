@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TransactionItemView: View {
-    let transaction: Transaction
+    let transaction: TransactionResponse
     
     var body: some View {
         HStack {

@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct TransactionsListView: View {
-    @State private var transactions: [Transaction] = []
+    @State private var transactions: [TransactionResponse] = []
     @State private var loadingState = LoadingState.loading
     @State private var showAlert = false
     @State private var alertError = ""
-    @State private var selectedTransaction: Transaction?
+    @State private var selectedTransaction: TransactionResponse?
     @State private var addTransaction = false
     @State private var currencyCode = "RUB"
     var service = TransactionService()

@@ -1,5 +1,5 @@
 //
-//  TransactionResponse.swift
+//  Transaction.swift
 //  YandexSHMR
 //
 //  Created by Никита Арабчик on 18.07.2025.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TransactionResponse: Decodable {
+struct Transaction: Codable {
     var id: Int
     var accountId: Int
     var categoryId: Int
@@ -26,6 +26,18 @@ struct TransactionResponse: Decodable {
         self.comment = comment
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(accountId, forKey: .accountId)
+        try container.encode(categoryId, forKey: .categoryId)
+        try container.encode(amount.description, forKey: .amount)
+        try container.encode(transactionDate, forKey: .transactionDate)
+        try container.encode(comment, forKey: .comment)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(updatedAt, forKey: .updatedAt)
     }
     
     enum CodingKeys: CodingKey {

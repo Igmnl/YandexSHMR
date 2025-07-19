@@ -11,8 +11,8 @@ struct MyHistoryView: View {
     @State private var selectedStartDate = Calendar.current.date(byAdding: .month, value: -1, to: .now) ?? .now
     @State private var selectedEndDate = Date()
     @State private var sortSelector = TransactionSortOrder.amountDescending
-    @State private var transactions: [Transaction] = []
-    @State private var selectedTransaction: Transaction?
+    @State private var transactions: [TransactionResponse] = []
+    @State private var selectedTransaction: TransactionResponse?
     @State private var loadingState = LoadingState.loading
     @State private var showAlert = false
     @State private var alertError = ""
@@ -20,7 +20,7 @@ struct MyHistoryView: View {
     
     let direction: Direction
     
-    private var sortedTransactions: [Transaction] {
+    private var sortedTransactions: [TransactionResponse] {
         transactions.sorted {
             switch sortSelector {
             case .dateDescending:

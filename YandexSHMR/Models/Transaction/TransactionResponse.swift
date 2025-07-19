@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Transaction: Identifiable, Hashable, Codable {
+struct TransactionResponse: Identifiable, Hashable, Codable {
     var id: Int
     var account: BankAccountBrief
     var category: Category

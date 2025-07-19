@@ -8,15 +8,33 @@
 import Foundation
 
 final class CategoriesService {
+    private let networkClient: NetworkClient
+    private let storage: CategoriesStorage
+    
+    init(
+        networkClient: NetworkClient = .shared,
+        storage: CategoriesStorage = SwiftDataCategoriesStorage()
+    ) {
+        self.networkClient = networkClient
+        self.storage = storage
+    }
+    
     func categories() async throws -> [Category] {
-        try await NetworkClient.shared.requets(method: .get, path: "/categories")
+        do {
+            let remoteCategories: [Category] = try await networkClient.requets(
+                method: .get,
+                path: "/categories"
+            )
+            
+            try await storage.saveCategories(remoteCategories)
+            return remoteCategories
+        } catch {
+            return try await storage.getCategories()
+        }
     }
     
     func categories(for direction: Direction) async throws -> [Category] {
         let categories = try await categories()
-        
-        return categories.filter { category in
-            category.direction == direction
-        }
+        return categories.filter { $0.direction == direction }
     }
 }

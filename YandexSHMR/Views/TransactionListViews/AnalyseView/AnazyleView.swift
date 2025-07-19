@@ -9,7 +9,7 @@ import UIKit
 import SwiftUI
 
 final class AnalyzeViewController: UITableViewController {
-    private var transactions: [Transaction] = []
+    private var transactions: [TransactionResponse] = []
     private var startDate = Date().addingTimeInterval(-86400 * 7)
     private var endDate = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: .now) ?? .now
     private var totalAmount: Decimal = 0
@@ -439,7 +439,7 @@ final class TransactionCell: UITableViewCell {
 }
 
 protocol AnalyzeViewControllerDelegate: AnyObject {
-    func didSelectTransaction(_ transaction: Transaction)
+    func didSelectTransaction(_ transaction: TransactionResponse)
 }
 
 struct AnalyzeView: UIViewControllerRepresentable {

@@ -18,7 +18,7 @@ enum HTTPMethod: String {
 final class NetworkClient {
     static let shared = NetworkClient()
     private let baseUrl: String = "https://shmr-finance.ru/api/v1"
-    private let token: String = "ADD YOUR TOKEN HERE" //Bundle.main.object(forInfoDictionaryKey: "API_TOKEN") as! String
+    private let token: String = "YOUR_TOKEN_HERE" //Bundle.main.object(forInfoDictionaryKey: "API_TOKEN") as! String
     
     func requets<T:Decodable>(method: HTTPMethod, path: String, body: Encodable? = nil) async throws ->  T {
         guard let url = URL(string: baseUrl + path) else {
@@ -33,7 +33,7 @@ final class NetworkClient {
         if let body {
             do {
                 let encoder = JSONEncoder()
-                encoder.dateEncodingStrategy = .formatted(Transaction.dateFormatter)
+                encoder.dateEncodingStrategy = .formatted(TransactionResponse.dateFormatter)
                 request.httpBody = try encoder.encode(body)
             } catch {
                 throw NetworkError.encodingError(error)
@@ -71,7 +71,7 @@ final class NetworkClient {
         
         do {
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .formatted(Transaction.dateFormatter)
+            decoder.dateDecodingStrategy = .formatted(TransactionResponse.dateFormatter)
             return try decoder.decode(T.self, from: data)
         } catch {
             throw NetworkError.decodingError(error)

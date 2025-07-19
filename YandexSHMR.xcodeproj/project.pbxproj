@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		CEAF63232E2A28A2008A7627 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = CEAF63222E2A2892008A7627 /* Secrets.xcconfig */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		CE80A9712DFCE71B00E3F7EC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -23,7 +19,6 @@
 /* Begin PBXFileReference section */
 		CE80A94B2DFCE6B100E3F7EC /* YandexSHMR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YandexSHMR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE80A96D2DFCE71B00E3F7EC /* YandexSHMRTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YandexSHMRTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		CEAF63222E2A2892008A7627 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -73,7 +68,6 @@
 		CE80A9422DFCE6B100E3F7EC = {
 			isa = PBXGroup;
 			children = (
-				CEAF63222E2A2892008A7627 /* Secrets.xcconfig */,
 				CE80A94D2DFCE6B100E3F7EC /* YandexSHMR */,
 				CE80A96E2DFCE71B00E3F7EC /* YandexSHMRTests */,
 				CE80A94C2DFCE6B100E3F7EC /* Products */,
@@ -182,7 +176,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CEAF63232E2A28A2008A7627 /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

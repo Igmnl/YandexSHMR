@@ -33,21 +33,14 @@ struct BankAccount: Codable {
         name = try container.decode(String.self, forKey: .name)
         currency = try container.decode(String.self, forKey: .currency)
         
-        if let stringValue = try? container.decode(String.self, forKey: .balance),
-           let decimalValue = Decimal(string: stringValue) {
-            balance = decimalValue
-        } else {
-            throw DecodingError.dataCorruptedError(
-                forKey: .balance,
-                in: container,
-                debugDescription: "Balance could not be parsed as Decimal, String, Double, or Int"
-            )
-        }
+        let stringValue = try? container.decode(String.self, forKey: .balance)
+        let decimalValue = Decimal(string: stringValue ?? "0")!
+        balance = decimalValue
         let createdAtString = try container.decode(String.self, forKey: .createdAt)
         let updatedAtString = try container.decode(String.self, forKey: .updatedAt)
         
-        guard let createdAtDate = Transaction.dateFormatter.date(from: createdAtString),
-              let updatedAtDate = Transaction.dateFormatter.date(from: updatedAtString) else {
+        guard let createdAtDate = TransactionResponse.dateFormatter.date(from: createdAtString),
+              let updatedAtDate = TransactionResponse.dateFormatter.date(from: updatedAtString) else {
             throw DecodingError.dataCorruptedError(
                 forKey: .createdAt,
                 in: container,

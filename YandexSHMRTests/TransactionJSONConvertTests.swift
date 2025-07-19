@@ -24,7 +24,7 @@ final class TransactionJSONConvertTests: XCTestCase {
             "createdAt": "2025-06-13T20:14:50.023Z",
             "updatedAt": "2025-06-13T20:14:50.023Z"
         ]
-        let transaction = Transaction.parse(jsonObject: json)
+        let transaction = TransactionResponse.parse(jsonObject: json)
 
         
         XCTAssertNotNil(transaction)
@@ -32,10 +32,10 @@ final class TransactionJSONConvertTests: XCTestCase {
         XCTAssertEqual(transaction?.account, account)
         XCTAssertEqual(transaction?.category, category)
         XCTAssertEqual(transaction?.amount, 500)
-        XCTAssertEqual(transaction?.transactionDate, Transaction.dateFormatter.date(from: "2025-06-13T20:14:50.023Z"))
+        XCTAssertEqual(transaction?.transactionDate, TransactionResponse.dateFormatter.date(from: "2025-06-13T20:14:50.023Z"))
         XCTAssertEqual(transaction?.comment, "Зарплата за месяц")
-        XCTAssertEqual(transaction?.createdAt, Transaction.dateFormatter.date(from: "2025-06-13T20:14:50.023Z"))
-        XCTAssertEqual(transaction?.updatedAt, Transaction.dateFormatter.date(from: "2025-06-13T20:14:50.023Z"))
+        XCTAssertEqual(transaction?.createdAt, TransactionResponse.dateFormatter.date(from: "2025-06-13T20:14:50.023Z"))
+        XCTAssertEqual(transaction?.updatedAt, TransactionResponse.dateFormatter.date(from: "2025-06-13T20:14:50.023Z"))
     }
     
     func testNilCommentJSON() {
@@ -51,7 +51,7 @@ final class TransactionJSONConvertTests: XCTestCase {
             "createdAt": "2025-06-13T20:14:50.023Z",
             "updatedAt": "2025-06-13T20:14:50.023Z"
         ]
-        let transaction = Transaction.parse(jsonObject: json)
+        let transaction = TransactionResponse.parse(jsonObject: json)
         XCTAssertNotNil(transaction)
         XCTAssertNil(transaction?.comment)
     }
@@ -70,7 +70,7 @@ final class TransactionJSONConvertTests: XCTestCase {
             "createdAt": "2025-06-13T20:14:50.023Z",
             "updatedAt": "2025-06-13T20:14:50.023Z"
         ]
-        let transaction = Transaction.parse(jsonObject: json)
+        let transaction = TransactionResponse.parse(jsonObject: json)
         XCTAssertNil(transaction)
     }
     
@@ -88,7 +88,7 @@ final class TransactionJSONConvertTests: XCTestCase {
             "createdAt": "2025-06-13T20:14:50.023Z",
             "updatedAt": "2025-06-13T20:14:50.023Z"
         ]
-        let transaction = Transaction.parse(jsonObject: json)
+        let transaction = TransactionResponse.parse(jsonObject: json)
         XCTAssertNil(transaction)
     }
     
@@ -99,21 +99,21 @@ final class TransactionJSONConvertTests: XCTestCase {
             "updatedAt": "2025-06-13T20:14:50.023Z"
         ]
         
-        let transaction = Transaction.parse(jsonObject: json)
+        let transaction = TransactionResponse.parse(jsonObject: json)
         XCTAssertNil(transaction)
     }
     
     func testValidTransaction() {
         let account = BankAccountBrief(id: 1, name: "Основной счёт", balance: 1000.00, currency: "RUB")
         let category = Category(id: 1, name: "Зарплата", emoji: "💰", isIncome: true)
-        let testDate = Transaction.dateFormatter.date(from: "2025-06-13T20:14:50.023Z")!
+        let testDate = TransactionResponse.dateFormatter.date(from: "2025-06-13T20:14:50.023Z")!
         
-        let transaction = Transaction(id: 1, account: account, category: category, amount: 500.00, transactionDate: testDate,comment: "Зарплата за месяц", createdAt: testDate, updatedAt: testDate)
+        let transaction = TransactionResponse(id: 1, account: account, category: category, amount: 500.00, transactionDate: testDate,comment: "Зарплата за месяц", createdAt: testDate, updatedAt: testDate)
         let json = transaction.jsonObject
         
         XCTAssertNotNil(json)
         
-        let parsedTransaction = Transaction.parse(jsonObject: json)
+        let parsedTransaction = TransactionResponse.parse(jsonObject: json)
         
         XCTAssertEqual(parsedTransaction?.id, transaction.id)
         XCTAssertEqual(parsedTransaction?.account, transaction.account)
@@ -128,14 +128,14 @@ final class TransactionJSONConvertTests: XCTestCase {
     func testNilCommentTransaction() {
         let account = BankAccountBrief(id: 1, name: "Основной счёт", balance: 1000.00, currency: "RUB")
         let category = Category(id: 1, name: "Зарплата", emoji: "💰", isIncome: true)
-        let testDate = Transaction.dateFormatter.date(from: "2025-06-13T20:14:50.023Z")!
+        let testDate = TransactionResponse.dateFormatter.date(from: "2025-06-13T20:14:50.023Z")!
         
-        let transaction = Transaction(id: 1, account: account, category: category, amount: 500.00, transactionDate: testDate, createdAt: testDate, updatedAt: testDate)
+        let transaction = TransactionResponse(id: 1, account: account, category: category, amount: 500.00, transactionDate: testDate, createdAt: testDate, updatedAt: testDate)
         let json = transaction.jsonObject
         
         XCTAssertNotNil(json)
         
-        let parsedTransaction = Transaction.parse(jsonObject: json)
+        let parsedTransaction = TransactionResponse.parse(jsonObject: json)
         
         XCTAssertNotNil(parsedTransaction)
         XCTAssertEqual(parsedTransaction?.comment, transaction.comment)

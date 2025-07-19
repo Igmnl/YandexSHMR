@@ -16,7 +16,7 @@ extension Binding {
 struct TransactionEditView: View {
     @Environment(\.dismiss) var dismiss
     @State private var isValid = false
-    @State private var transaction: Transaction
+    @State private var transaction: TransactionResponse
     @State private var categories: [Category] = []
     @State private var loadingState = LoadingState.loading
     @State private var showAlert = false
@@ -141,7 +141,7 @@ struct TransactionEditView: View {
         }
     }
     
-    init(transaction: Transaction, service: TransactionService) {
+    init(transaction: TransactionResponse, service: TransactionService) {
         self.transaction = transaction
         self.service = service
     }
