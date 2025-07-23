@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension Transaction {
+extension TransactionResponse {
     
     static var dateFormatter: DateFormatter {
         let dateFormatter = DateFormatter()

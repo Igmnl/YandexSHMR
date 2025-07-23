@@ -16,8 +16,11 @@ extension Binding {
 struct TransactionEditView: View {
     @Environment(\.dismiss) var dismiss
     @State private var isValid = false
-    @State private var transaction: Transaction
+    @State private var transaction: TransactionResponse
     @State private var categories: [Category] = []
+    @State private var loadingState = LoadingState.loading
+    @State private var showAlert = false
+    @State private var alertError = ""
     @FocusState private var isFocused: Bool
     private var maxLength = 30
     var service: TransactionService
@@ -99,6 +102,11 @@ struct TransactionEditView: View {
                 
             }
             .navigationTitle("Мои \(transaction.category.isIncome ? "Доходы" : "Расходы")")
+            .overlay {
+                if loadingState == .loading {
+                    ProgressView()
+                }
+            }
             .task {
                 await fetchCategories()
             }
@@ -127,42 +135,55 @@ struct TransactionEditView: View {
             } message: {
                 Text("Невалидные данные")
             }
+            .alert("Ошибка!", isPresented: $showAlert) {} message: {
+                Text(alertError)
+            }
         }
     }
     
-    init(transaction: Transaction, service: TransactionService) {
+    init(transaction: TransactionResponse, service: TransactionService) {
         self.transaction = transaction
         self.service = service
     }
     
     func fetchCategories() async {
+        loadingState = .loading
         do {
             categories = try await CategoriesService().categories(for: transaction.category.direction)
+            loadingState = .loaded
         } catch {
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
             print("Error fetching categories: \(error.localizedDescription)")
         }
     }
     
     func saveTransaction() async {
+        loadingState = .loading
         do {
             try await service.updateTransaction(transaction: transaction)
+            loadingState = .loaded
             dismiss()
         } catch {
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
             print("Saving transaction error: \(error.localizedDescription)")
         }
     }
     
     func deleteTransaction() async {
+        loadingState = .loading
         do {
-            try await service.deleteTransaction(id: transaction.id)
+            try await service.deleteTransaction(transactionId: transaction.id)
+            loadingState = .loaded
             dismiss()
         } catch {
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
             print("Delete transaction error: \(error.localizedDescription)")
         }
     }
-}
-
-#Preview {
-    @Previewable var transaction = TransactionService().transactions[0]
-    TransactionEditView(transaction: transaction, service: TransactionService())
 }

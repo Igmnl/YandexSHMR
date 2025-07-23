@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CE0B82F82E312F7F00D7FD0E /* PieChart in Frameworks */ = {isa = PBXBuildFile; productRef = CE0B82F72E312F7F00D7FD0E /* PieChart */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		CE80A9712DFCE71B00E3F7EC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -17,6 +21,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CE678BC02E312AD10064B35A /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = Utilities/Package.swift; sourceTree = "<group>"; };
+		CE678BC22E312AE50064B35A /* Utilities */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Utilities; sourceTree = "<group>"; };
 		CE80A94B2DFCE6B100E3F7EC /* YandexSHMR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YandexSHMR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE80A96D2DFCE71B00E3F7EC /* YandexSHMRTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YandexSHMRTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -52,6 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE0B82F82E312F7F00D7FD0E /* PieChart in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,11 +72,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CE678BBF2E312AD10064B35A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CE678BC22E312AE50064B35A /* Utilities */,
+				CE678BC02E312AD10064B35A /* Package.swift */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		CE80A9422DFCE6B100E3F7EC = {
 			isa = PBXGroup;
 			children = (
 				CE80A94D2DFCE6B100E3F7EC /* YandexSHMR */,
 				CE80A96E2DFCE71B00E3F7EC /* YandexSHMRTests */,
+				CE678BBF2E312AD10064B35A /* Frameworks */,
 				CE80A94C2DFCE6B100E3F7EC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -103,6 +120,7 @@
 			);
 			name = YandexSHMR;
 			packageProductDependencies = (
+				CE0B82F72E312F7F00D7FD0E /* PieChart */,
 			);
 			productName = YandexSHMR;
 			productReference = CE80A94B2DFCE6B100E3F7EC /* YandexSHMR.app */;
@@ -160,6 +178,9 @@
 			);
 			mainGroup = CE80A9422DFCE6B100E3F7EC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CE678BBE2E312AAE0064B35A /* XCLocalSwiftPackageReference "Utilities" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CE80A94C2DFCE6B100E3F7EC /* Products */;
 			projectDirPath = "";
@@ -463,6 +484,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		CE678BBE2E312AAE0064B35A /* XCLocalSwiftPackageReference "Utilities" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Utilities;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CE0B82F72E312F7F00D7FD0E /* PieChart */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PieChart;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CE80A9432DFCE6B100E3F7EC /* Project object */;
 }

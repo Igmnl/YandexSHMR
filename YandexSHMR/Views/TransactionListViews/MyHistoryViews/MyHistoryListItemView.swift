@@ -9,9 +9,7 @@ import SwiftUI
 import Foundation
 
 struct MyHistoryListItemView: View {
-    let transaction: Transaction
-    
-
+    let transaction: TransactionResponse
     
     var body: some View {
         HStack {
@@ -27,7 +25,7 @@ struct MyHistoryListItemView: View {
                 Text(transaction.category.name)
                     .font(.system(size: 17))
                 
-                if let comment = transaction.comment {
+                if let comment = transaction.comment, !comment.isEmpty {
                     Text(comment)
                         .foregroundStyle(.secondary)
                         .font(.system(size: 13))
@@ -53,9 +51,4 @@ struct MyHistoryListItemView: View {
         }
         .frame(height: 44)
     }
-}
-
-#Preview {
-    let transaction = TransactionService().transactions[2]
-    MyHistoryListItemView(transaction: transaction)
 }

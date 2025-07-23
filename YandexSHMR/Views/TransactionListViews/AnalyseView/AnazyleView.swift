@@ -7,12 +7,18 @@
 
 import UIKit
 import SwiftUI
+import PieChart
 
 final class AnalyzeViewController: UITableViewController {
-    private var transactions: [Transaction] = []
+    private var pieChartView: PieChartView!
+    private var transactions: [TransactionResponse] = []
+    private var pieChartContainer = UIView()
     private var startDate = Date().addingTimeInterval(-86400 * 7)
     private var endDate = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: .now) ?? .now
     private var totalAmount: Decimal = 0
+    private let filtersSection = 0
+    private let chartSection = 1
+    private let transactionsSection = 2
     private var sortOrder: TransactionSortOrder = .amountAscending
     weak var coordinator: AnalyzeCoordinator?
     var direction: Direction = .income
@@ -21,11 +27,13 @@ final class AnalyzeViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
+        setupPieChart()
         loadTransactions()
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard indexPath.section == 1 else { return }
+        guard indexPath.section == transactionsSection else { return }
+        
         let transaction = transactions[indexPath.row]
         coordinator?.selectedTransaction = transaction
         
@@ -62,10 +70,13 @@ final class AnalyzeViewController: UITableViewController {
     @objc func loadTransactions() {
         Task {
             do {
-                let mockTransactions = try await service.transactions(period: startDate...endDate)
+                let account = try await BankAccountService().bankAccount()
+                let mockTransactions = try await service.transactions(accountId: account.id, startDate: startDate, endDate: endDate)
                 
-                transactions = mockTransactions.filter({ $0.category.direction == direction})
+                transactions = mockTransactions.filter { $0.category.direction == direction }
                 totalAmount = transactions.reduce(0) { $0 + $1.amount }
+                
+                updateChartData()
                 
                 tableView.reloadData()
                 tableView.refreshControl?.endRefreshing()
@@ -74,23 +85,90 @@ final class AnalyzeViewController: UITableViewController {
             }
         }
     }
+    
+    private func setupPieChart() {
+        pieChartView = PieChartView()
+        pieChartView.translatesAutoresizingMaskIntoConstraints = false
+        pieChartView.isHidden = true
+        pieChartView.backgroundColor = .clear
+
+    }
+    
+    
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if section == 2 {
+            return 20
+        }
+        return 0.1
+    }
+    
+    private func updateChartData() {
+        let entities = transactions
+            .reduce(into: [String: Decimal]()) { result, transaction in
+                result[transaction.category.name, default: 0] += transaction.amount
+            }
+            .map { Entity(value: $0.value, label: $0.key) }
+        
+        if pieChartView.isHidden {
+            pieChartView.entities = entities
+            pieChartView.isHidden = entities.isEmpty
+        } else {
+            pieChartView.animateToNewData(entities, duration: 0.8)
+        }
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        if indexPath.section == chartSection {
+            return 220
+        }
+        return UITableView.automaticDimension
+    }
+    
 }
 
 extension AnalyzeViewController {
     override func numberOfSections(in tableView: UITableView) -> Int {
-        2
+        3
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        section == 0 ? 4 : transactions.count
+        switch section {
+        case 0: return 4
+        case 1: return 1
+        case 2: return transactions.count
+        default: return 0
+        }
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        section == 1 ? "Операции" : nil
+        if section == 2 {
+            return "Операции"
+        }
+        return nil
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.section == 0 {
+        if indexPath.section == chartSection {
+            let cell = UITableViewCell()
+            cell.backgroundColor = .clear
+            cell.selectionStyle = .none
+            cell.contentView.backgroundColor = .clear
+            
+            cell.isUserInteractionEnabled = false
+            
+            cell.contentView.addSubview(pieChartView)
+            
+            NSLayoutConstraint.activate([
+                pieChartView.centerXAnchor.constraint(equalTo: cell.contentView.centerXAnchor),
+                pieChartView.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 4),
+                pieChartView.widthAnchor.constraint(equalToConstant: 220),
+                pieChartView.heightAnchor.constraint(equalToConstant: 220),
+                pieChartView.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor, constant: -4)
+            ])
+            
+            return cell
+        }
+        else if indexPath.section == filtersSection {
             switch indexPath.row {
             case 0:
                 let cell = tableView.dequeueReusableCell(withIdentifier: DatePickerCell.reuseId, for: indexPath) as! DatePickerCell
@@ -438,7 +516,7 @@ final class TransactionCell: UITableViewCell {
 }
 
 protocol AnalyzeViewControllerDelegate: AnyObject {
-    func didSelectTransaction(_ transaction: Transaction)
+    func didSelectTransaction(_ transaction: TransactionResponse)
 }
 
 struct AnalyzeView: UIViewControllerRepresentable {

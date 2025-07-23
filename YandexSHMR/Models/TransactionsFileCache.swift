@@ -9,9 +9,9 @@ import Foundation
 
 struct TransactionsFileCache {
     
-    private(set) var transactions: [Transaction] = []
+    private(set) var transactions: [TransactionResponse] = []
     
-    mutating func add(_ transaction: Transaction) {
+    mutating func add(_ transaction: TransactionResponse) {
         transactions.append(transaction)
     }
     
@@ -52,7 +52,7 @@ struct TransactionsFileCache {
         }
         
         self.transactions = jsonObjects.compactMap { jsonObject in
-            if let transaction = Transaction.parse(jsonObject: jsonObject) {
+            if let transaction = TransactionResponse.parse(jsonObject: jsonObject) {
                 if !doesContain(transaction: transaction) {
                     return transaction
                 }
@@ -61,7 +61,7 @@ struct TransactionsFileCache {
         }
     }
     
-    private func doesContain(transaction: Transaction) -> Bool {
+    private func doesContain(transaction: TransactionResponse) -> Bool {
         if transactions.contains(where: { transaction.id == $0.id }) {
             return true
         }

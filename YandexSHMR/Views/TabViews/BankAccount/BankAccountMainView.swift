@@ -49,7 +49,7 @@ struct BankAccountMainView: View {
                     Spacer()
                     Text(currencySymbol)
                         .font(.system(size: 17))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                 }
                 .listRowBackground(Color.transactionIconBackground)
             }
@@ -66,7 +66,3 @@ struct BankAccountMainView: View {
     }
 }
 
-#Preview {
-    @Previewable @State var isEditing: Bool = false
-    BankAccountMainView(bankAccount: BankAccountService().account, isEditing: $isEditing)
-}

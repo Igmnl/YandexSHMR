@@ -11,7 +11,7 @@ struct HistoryAndAnalyzeView: View {
     let direction: Direction
     let service: TransactionService
     
-    @State private var selectedTransaction: Transaction?
+    @State private var selectedTransaction: TransactionResponse?
     @StateObject private var coordinator = AnalyzeCoordinator()
     
     var body: some View {
@@ -33,12 +33,12 @@ struct HistoryAndAnalyzeView: View {
 }
 
 class AnalyzeCoordinator: ObservableObject {
-    @Published var selectedTransaction: Transaction? {
-            didSet {
-                if selectedTransaction == nil {
-                }
+    @Published var selectedTransaction: TransactionResponse? {
+        didSet {
+            if selectedTransaction == nil {
             }
         }
+    }
 }
 
 

@@ -8,10 +8,13 @@
 import SwiftUI
 
 struct TransactionsListView: View {
-    @State private var transactions: [Transaction] = []
-    @State private var isLoading = false
-    @State private var selectedTransaction: Transaction?
+    @State private var transactions: [TransactionResponse] = []
+    @State private var loadingState = LoadingState.loading
+    @State private var showAlert = false
+    @State private var alertError = ""
+    @State private var selectedTransaction: TransactionResponse?
     @State private var addTransaction = false
+    @State private var currencyCode = "RUB"
     var service = TransactionService()
     let direction: Direction
     
@@ -22,9 +25,6 @@ struct TransactionsListView: View {
             sum += transaction.amount
         }
         return sum
-    }
-    private var currencyCode: String {
-        transactions.first?.account.currency ?? "RUB"
     }
     
     var body: some View {
@@ -53,8 +53,11 @@ struct TransactionsListView: View {
                 }
             }
         }
+        .alert("Ошибка!", isPresented: $showAlert) {} message: {
+            Text(alertError)
+        }
         .overlay {
-            if isLoading {
+            if loadingState == .loading {
                 ProgressView()
             }
         }
@@ -102,7 +105,7 @@ struct TransactionsListView: View {
     }
     
     func fetchTransactions() async {
-        isLoading = true
+        loadingState = .loading
         
         let calendar = Calendar.current
         let now = Date()
@@ -111,13 +114,18 @@ struct TransactionsListView: View {
         let dayEnd = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: now) ?? .now
         
         do {
-            transactions = try await service.transactions(startDate: dayStart, endDate: dayEnd)
+            let account = try await BankAccountService().bankAccount()
+            transactions = try await service.transactions(accountId: account.id, startDate: dayStart, endDate: dayEnd)
             transactions = transactions.filter({ $0.category.direction == direction })
+            loadingState = .loaded
+            
+            currencyCode = account.currency
         } catch {
+            loadingState = .error
+            alertError = error.localizedDescription
+            showAlert = true
             print("Ошибка загрузки транзакций: \(error)")
         }
-        
-        isLoading = false
     }
 }
 

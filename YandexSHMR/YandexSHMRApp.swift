@@ -12,6 +12,9 @@ struct YandexSHMRApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .task {
+                    await TransactionService().initialSync()
+                }
         }
     }
 }
