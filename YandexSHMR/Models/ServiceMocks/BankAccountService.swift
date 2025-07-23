@@ -30,7 +30,6 @@ final class BankAccountService {
                 method: .get,
                 path: "/accounts"
             )
-            
             guard let account = accounts.first else {
                 throw NSError(domain: "No accounts found", code: 0)
             }

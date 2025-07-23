@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BankAccountMainView: View {
-    let bankAccount: BankAccount
+    var bankAccount: BankAccount
     @Binding var isEditing: Bool
     @State private var isBlur = false
     
@@ -64,9 +64,4 @@ struct BankAccountMainView: View {
             }
         }
     }
-}
-
-#Preview {
-    @Previewable @State var isEditing: Bool = false
-    BankAccountMainView(bankAccount: BankAccount(id: 1, userId: 1, name: "afs", balance: 123, currency: "USD", createdAt: Date(), updatedAt: Date()), isEditing: $isEditing)
 }

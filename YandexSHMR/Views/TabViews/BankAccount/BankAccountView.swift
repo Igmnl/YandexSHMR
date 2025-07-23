@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+
 struct BankAccountView: View {
     @State private var loadingState: LoadingState = .loading
-    @State private var bankAccount = BankAccount(id: 1, userId: 1, name: "", balance: 100, currency: "RUB", createdAt: Date(), updatedAt: Date())
+    @State private var bankAccount = BankAccount(id: 1, userId: 1, name: "", balance: 0, currency: "RUB", createdAt: Date(), updatedAt: Date())
     @State private var isEditing = false
     @State private var showAlert = false
     @State private var alertError = ""
@@ -27,10 +28,8 @@ struct BankAccountView: View {
                         }
                 } else {
                     BankAccountMainView(bankAccount: bankAccount, isEditing: $isEditing)
-                        .onAppear {
-                            Task {
-                                await fetchBankAccount()
-                            }
+                        .task(priority: .high) {
+                            await fetchBankAccount()
                         }
                 }
             }
@@ -53,7 +52,6 @@ struct BankAccountView: View {
     func fetchBankAccount() async {
         loadingState = .loading
         do {
-            sleep(1)
             bankAccount = try await bankAccountService.bankAccount()
             loadingState = .loaded
         } catch {
