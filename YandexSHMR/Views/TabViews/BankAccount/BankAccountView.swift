@@ -20,6 +20,11 @@ struct BankAccountView: View {
             Group {
                 if isEditing {
                     BankAccountEditView(bankAccountService: bankAccountService, bankAccount: bankAccount, isEditing: $isEditing)
+                        .onDisappear {
+                            Task {
+                                await fetchBankAccount()
+                            }
+                        }
                 } else {
                     BankAccountMainView(bankAccount: bankAccount, isEditing: $isEditing)
                         .onAppear {
@@ -48,6 +53,7 @@ struct BankAccountView: View {
     func fetchBankAccount() async {
         loadingState = .loading
         do {
+            sleep(1)
             bankAccount = try await bankAccountService.bankAccount()
             loadingState = .loaded
         } catch {

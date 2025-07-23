@@ -18,7 +18,7 @@ enum HTTPMethod: String {
 final class NetworkClient {
     static let shared = NetworkClient()
     private let baseUrl: String = "https://shmr-finance.ru/api/v1"
-    private let token: String = "YOUR_TOKEN_HERE" //Bundle.main.object(forInfoDictionaryKey: "API_TOKEN") as! String
+    private let token: String = "V76FQ12pDIVUTvx73sy6Tbfe" //Bundle.main.object(forInfoDictionaryKey: "API_TOKEN") as! String
     
     func requets<T:Decodable>(method: HTTPMethod, path: String, body: Encodable? = nil) async throws ->  T {
         guard let url = URL(string: baseUrl + path) else {
