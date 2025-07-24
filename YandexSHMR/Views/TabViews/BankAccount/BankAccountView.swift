@@ -8,10 +8,12 @@
 import SwiftUI
 struct BankAccountView: View {
     @State private var loadingState: LoadingState = .loading
-    @State private var bankAccount = BankAccount(id: 1, userId: 1, name: "", balance: 100, currency: "RUB", createdAt: Date(), updatedAt: Date())
+    @State private var bankAccount = BankAccount(id: 1, userId: 1, name: "", balance: 0, currency: "RUB", createdAt: Date(), updatedAt: Date())
     @State private var isEditing = false
     @State private var showAlert = false
     @State private var alertError = ""
+    @State private var transactions: [TransactionResponse] = []
+    var service: TransactionService
     
     let bankAccountService = BankAccountService()
     
@@ -20,8 +22,13 @@ struct BankAccountView: View {
             Group {
                 if isEditing {
                     BankAccountEditView(bankAccountService: bankAccountService, bankAccount: bankAccount, isEditing: $isEditing)
+                        .onDisappear {
+                            Task {
+                                await fetchBankAccount()
+                            }
+                        }
                 } else {
-                    BankAccountMainView(bankAccount: bankAccount, isEditing: $isEditing)
+                    BankAccountMainView(transactions: transactions, bankAccount: bankAccount, isEditing: $isEditing)
                         .onAppear {
                             Task {
                                 await fetchBankAccount()
@@ -49,6 +56,8 @@ struct BankAccountView: View {
         loadingState = .loading
         do {
             bankAccount = try await bankAccountService.bankAccount()
+            transactions = try await service.transactions(accountId: bankAccount.id, startDate: Calendar.current.date(byAdding: .month, value: -1, to: Date())!, endDate: Date())
+            sleep(1)
             loadingState = .loaded
         } catch {
             loadingState = .error
@@ -59,7 +68,3 @@ struct BankAccountView: View {
     }
 }
 
-
-#Preview {
-    BankAccountView()
-}

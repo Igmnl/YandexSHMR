@@ -8,16 +8,14 @@
 import SwiftUI
 
 struct ExpensesView: View {
-
+    let service: TransactionService
+    
     var body: some View {
         NavigationStack {
-            TransactionsListView(direction: .outcome)
+            TransactionsListView(service: service, direction: .outcome)
                 .navigationTitle("Расходы сегодня")
         }
         .tint(.toolbarButton)
     }
 }
 
-#Preview {
-    ExpensesView()
-}
