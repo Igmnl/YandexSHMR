@@ -6,15 +6,28 @@
 //
 
 import SwiftUI
+import LaunchAnimation
 
 @main
 struct YandexSHMRApp: App {
+    @State private var showAnimation = true
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .task {
-                    await TransactionService().initialSync()
+            if showAnimation {
+                LaunchAnimationView {
+                    withAnimation {
+                        showAnimation = false
+                    }
                 }
+                .ignoresSafeArea()
+            } else {
+                ContentView()
+                    .transition(.identity)
+                    .task {
+                        await TransactionService().initialSync()
+                    }
+            }
         }
     }
 }

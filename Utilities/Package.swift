@@ -11,6 +11,12 @@ let package = Package(
         .library(
             name: "PieChart",
             targets: ["PieChart"]),
+        .library(
+            name: "LaunchAnimation",
+            targets: ["LaunchAnimation"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.5.2"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -21,5 +27,15 @@ let package = Package(
             path: "Sources/PieChart",
             publicHeadersPath: "Include"
         ),
+        
+        .target(
+            name: "LaunchAnimation",
+            dependencies: [
+                .product(name: "Lottie", package: "lottie-spm")
+            ],
+            path: "Sources/LaunchAnimation",
+            resources: [
+                .process("Resources/launch-animation.json")
+            ]),
     ]
 )

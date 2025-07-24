@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		CE0B82F82E312F7F00D7FD0E /* PieChart in Frameworks */ = {isa = PBXBuildFile; productRef = CE0B82F72E312F7F00D7FD0E /* PieChart */; };
+		CE3873E52E3235D500879AA7 /* LaunchAnimation in Frameworks */ = {isa = PBXBuildFile; productRef = CE3873E42E3235D500879AA7 /* LaunchAnimation */; };
+		CE6197C12E3233A000C8C07E /* PieChart in Frameworks */ = {isa = PBXBuildFile; productRef = CE6197C02E3233A000C8C07E /* PieChart */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -21,6 +23,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CE345B3D2E322F40009001EE /* launch-animation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "launch-animation.json"; sourceTree = "<group>"; };
 		CE678BC02E312AD10064B35A /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = Utilities/Package.swift; sourceTree = "<group>"; };
 		CE678BC22E312AE50064B35A /* Utilities */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Utilities; sourceTree = "<group>"; };
 		CE80A94B2DFCE6B100E3F7EC /* YandexSHMR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YandexSHMR.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,7 +61,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE6197C12E3233A000C8C07E /* PieChart in Frameworks */,
 				CE0B82F82E312F7F00D7FD0E /* PieChart in Frameworks */,
+				CE3873E52E3235D500879AA7 /* LaunchAnimation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,6 +77,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CE345B3C2E322F2F009001EE /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				CE345B3D2E322F40009001EE /* launch-animation.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		CE678BBF2E312AD10064B35A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -84,6 +97,7 @@
 		CE80A9422DFCE6B100E3F7EC = {
 			isa = PBXGroup;
 			children = (
+				CE345B3C2E322F2F009001EE /* Resources */,
 				CE80A94D2DFCE6B100E3F7EC /* YandexSHMR */,
 				CE80A96E2DFCE71B00E3F7EC /* YandexSHMRTests */,
 				CE678BBF2E312AD10064B35A /* Frameworks */,
@@ -121,6 +135,8 @@
 			name = YandexSHMR;
 			packageProductDependencies = (
 				CE0B82F72E312F7F00D7FD0E /* PieChart */,
+				CE6197C02E3233A000C8C07E /* PieChart */,
+				CE3873E42E3235D500879AA7 /* LaunchAnimation */,
 			);
 			productName = YandexSHMR;
 			productReference = CE80A94B2DFCE6B100E3F7EC /* YandexSHMR.app */;
@@ -179,7 +195,7 @@
 			mainGroup = CE80A9422DFCE6B100E3F7EC;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				CE678BBE2E312AAE0064B35A /* XCLocalSwiftPackageReference "Utilities" */,
+				CE6197BF2E3233A000C8C07E /* XCLocalSwiftPackageReference "Utilities" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CE80A94C2DFCE6B100E3F7EC /* Products */;
@@ -486,7 +502,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		CE678BBE2E312AAE0064B35A /* XCLocalSwiftPackageReference "Utilities" */ = {
+		CE6197BF2E3233A000C8C07E /* XCLocalSwiftPackageReference "Utilities" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Utilities;
 		};
@@ -494,6 +510,14 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		CE0B82F72E312F7F00D7FD0E /* PieChart */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PieChart;
+		};
+		CE3873E42E3235D500879AA7 /* LaunchAnimation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LaunchAnimation;
+		};
+		CE6197C02E3233A000C8C07E /* PieChart */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PieChart;
 		};
