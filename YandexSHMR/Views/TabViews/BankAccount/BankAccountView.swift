@@ -56,8 +56,7 @@ struct BankAccountView: View {
         loadingState = .loading
         do {
             bankAccount = try await bankAccountService.bankAccount()
-            transactions = try await service.transactions(accountId: bankAccount.id, startDate: Calendar.current.date(byAdding: .month, value: -1, to: Date())!, endDate: Date())
-            sleep(1)
+            transactions = try await service.transactions(accountId: bankAccount.id, startDate: Calendar.current.date(byAdding: .month, value: -24, to: Date())!, endDate: Date())
             loadingState = .loaded
         } catch {
             loadingState = .error

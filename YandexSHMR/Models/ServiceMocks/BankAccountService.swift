@@ -59,6 +59,7 @@ final class BankAccountService {
                 body: updateRequest
             )
             
+            try await syncPendingAccountUpdates()
             try await storage.saveAccount(account)
             
             try await backupStorage.removePendingUpdates([id])
