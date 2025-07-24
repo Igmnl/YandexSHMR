@@ -47,7 +47,7 @@ final class TransactionService {
             let pendingOps = try await backupStorage.getPendingOperations()
             
             let merged = mergeTransactions(local: local, pending: pendingOps, accountId: accountId, startDate: startDate, endDate: endDate)
-            
+
             return merged
         }
     }
@@ -70,12 +70,26 @@ final class TransactionService {
     }
     
     func createTransaction(transaction: TransactionResponse) async throws {
+        let duplicateKey = "\(transaction.amount)-\(transaction.transactionDate.timeIntervalSince1970)-\(transaction.category.id)"
+        
+        let allLocal = try await localStorage.getAllTransactions()
+        let isDuplicate = allLocal.contains { tx in
+            let txKey = "\(tx.amount)-\(tx.transactionDate.timeIntervalSince1970)-\(tx.category.id)"
+            return txKey == duplicateKey
+        }
+        
+        guard !isDuplicate else {
+            print("Обнаружен дубликат транзакции, пропускаем создание")
+            return
+        }
+        
         do {
             let createdTransaction = try await performCreateTransaction(transaction)
             try await localStorage.createTransaction(createdTransaction)
             try await backupStorage.removePendingOperations([transaction.id])
         } catch {
-            let temporaryId = -Int.random(in: 1...Int.max)
+            let temporaryId = -Int(Date().timeIntervalSince1970)
+            
             let offlineTransaction = TransactionResponse(
                 id: temporaryId,
                 account: transaction.account,
@@ -87,30 +101,42 @@ final class TransactionService {
                 updatedAt: Date()
             )
             
-            try await localStorage.createTransaction(offlineTransaction)
+            let pendingOps = try await backupStorage.getPendingOperations()
+            let existsInBackup = pendingOps.contains { $0.transaction.id == temporaryId }
             
-            let operation = PendingTransactionOperation(
-                operationType: .create,
-                transaction: offlineTransaction
-            )
-            try await backupStorage.addPendingOperation(operation)
+            if !existsInBackup {
+                try await localStorage.createTransaction(offlineTransaction)
+                
+                let operation = PendingTransactionOperation(
+                    operationType: .create,
+                    transaction: offlineTransaction
+                )
+                try await backupStorage.addPendingOperation(operation)
+            }
         }
     }
     
     func updateTransaction(transaction: TransactionResponse) async throws {
-        try await localStorage.updateTransaction(transaction)
+        guard (try? await localStorage.getTransaction(id: transaction.id)) != nil else {
+            throw TransactionServiceError.transactionNotFound
+        }
         
         do {
             let updatedTransaction = try await performUpdateTransaction(transaction)
+            
             try await localStorage.updateTransaction(updatedTransaction)
+            
             try await backupStorage.removePendingOperations([transaction.id])
         } catch {
-            
             let operation = PendingTransactionOperation(
                 operationType: .update,
                 transaction: transaction
             )
+            
             try await backupStorage.addPendingOperation(operation)
+            try await localStorage.updateTransaction(transaction)
+            
+            throw error 
         }
     }
     
@@ -165,28 +191,66 @@ final class TransactionService {
             result[tx.id] = tx
         }.values
         
-        return Array(allTransactions).sorted { $0.transactionDate > $1.transactionDate }
+        let uniqueTransactions = allTransactions.reduce(into: [String: TransactionResponse]()) { result, tx in
+            let key = "\(tx.amount)-\(tx.transactionDate.timeIntervalSince1970)-\(tx.category.id)"
+            result[key] = tx
+        }.values
+        
+        return Array(uniqueTransactions).sorted { $0.transactionDate > $1.transactionDate }
     }
     
     private func syncPendingOperations() async throws {
         let pendingOperations = try await backupStorage.getPendingOperations()
         
+        var operationsToRemove = [Int]()
+        
         for operation in pendingOperations {
             do {
                 switch operation.operationType {
                 case .create:
-                    _ = try await performCreateTransaction(operation.transaction)
+                    if (try? await localStorage.getTransaction(id: operation.id)) == nil {
+                        let createdTransaction = try await performCreateTransaction(operation.transaction)
+                        try await localStorage.createTransaction(createdTransaction)
+                    }
+                    try await backupStorage.removePendingOperations([operation.id])
+                    
                 case .update:
-                    _ = try await performUpdateTransaction(operation.transaction)
+                    if (try? await localStorage.getTransaction(id: operation.id)) != nil {
+                        _ = try await performUpdateTransaction(operation.transaction)
+                        try await localStorage.updateTransaction(operation.transaction)
+                        operationsToRemove.append(operation.id)
+                    } else {
+                        try await performCreateTransaction(operation.transaction)
+                        operationsToRemove.append(operation.id)
+                    }
+                    
                 case .delete:
-                    try await performDeleteTransaction(operation.id)
+                    do {
+                        try await performDeleteTransaction(operation.id)
+                        operationsToRemove.append(operation.id)
+                    } catch NetworkError.notFound {
+                        operationsToRemove.append(operation.id)
+                        try await localStorage.deleteTransaction(id: operation.id)
+                    }
                 }
-                try await backupStorage.removePendingOperations([operation.id])
             } catch {
-                continue
+                print("Ошибка синхронизации операции \(operation.id): \(error)")
+                
+                // Помечаем проблемные операции для последующей обработки
+                if let networkError = error as? NetworkError {
+                    switch networkError {
+                    case .notFound, .invalidDataOrIdentifier:
+                        operationsToRemove.append(operation.id)
+                    default:
+                        break
+                    }
+                }
             }
         }
+        
+        try await backupStorage.removePendingOperations(operationsToRemove)
     }
+    
     
     private func fetchRemoteTransactions(
         accountId: Int,
@@ -207,6 +271,9 @@ final class TransactionService {
     }
     
     private func performCreateTransaction(_ transaction: TransactionResponse) async throws -> TransactionResponse {
+        if let existing = try? await localStorage.getTransaction(id: transaction.id) {
+            return existing
+        }
         let formatedDate = TransactionResponse.dateFormatter.string(from: transaction.transactionDate)
         let newTransaction = TransactionRequest(
             accountId: transaction.account.id,

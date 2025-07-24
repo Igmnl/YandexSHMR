@@ -114,6 +114,7 @@ struct MyHistoryView: View {
                 ForEach(sortedTransactions) { transaction in
                     Button {
                         selectedTransaction = transaction
+                        print(transaction)
                     } label: {
                         MyHistoryListItemView(transaction: transaction)
                     }

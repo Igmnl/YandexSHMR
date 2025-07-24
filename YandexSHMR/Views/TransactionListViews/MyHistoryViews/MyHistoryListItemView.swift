@@ -11,8 +11,6 @@ import Foundation
 struct MyHistoryListItemView: View {
     let transaction: TransactionResponse
     
-
-    
     var body: some View {
         HStack {
             if !transaction.category.isIncome {

@@ -107,6 +107,19 @@ final class SwiftDataTransactionStorage: TransactionStorage {
                 return nil
             }
             
+            let isDuplicate = models.contains(where: {
+                $0.id != model.id &&
+                $0.amount == model.amount &&
+                $0.transactionDate == model.transactionDate &&
+                $0.categoryId == model.categoryId
+            })
+            
+            guard !isDuplicate else {
+                print("Обнаружена дублирующая транзакция: \(model.id). Удаляем дубликат.")
+                context.delete(model)
+                return nil
+            }
+            
             return TransactionResponse(
                 id: model.id,
                 account: accountBrief,
@@ -161,10 +174,20 @@ final class SwiftDataTransactionStorage: TransactionStorage {
     }
     
     func saveTransactions(_ remoteTransactions: [TransactionResponse], forPeriod startDate: Date, endDate: Date) async throws {
-        let remoteIdsInPeriod = Set(remoteTransactions.map { $0.id })
         
         let localModelsInPeriod = try await getLocalModels(for: startDate, endDate: endDate)
         
+        var validTransactions = [TransactionResponse]()
+        for transaction in remoteTransactions {
+            guard transaction.id > 0,
+                  transaction.amount > 0,
+                  !transaction.category.name.isEmpty else {
+                continue
+            }
+            validTransactions.append(transaction)
+        }
+        
+        let remoteIdsInPeriod = Set(validTransactions.map { $0.id })
         for model in localModelsInPeriod {
             if !remoteIdsInPeriod.contains(model.id) {
                 context.delete(model)

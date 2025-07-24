@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct TabBar: View {
+    let service = TransactionService()
     
     var body: some View {
         TabView {
             Tab {
-                ExpensesView()
+                ExpensesView(service: service)
                     .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Расходы", imageName: "downtrend-7")
@@ -20,14 +21,14 @@ struct TabBar: View {
            
             
             Tab {
-                IncomeView()
+                IncomeView(service: service)
                     .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Доходы", imageName: "uptrend-7")
             }
             
             Tab {
-                BankAccountView()
+                BankAccountView(service: service)
                     .toolbarBackgroundVisibility(.visible, for: .tabBar)
             } label: {
                 TabItemLabel(label: "Счет", imageName: "calculator-7")

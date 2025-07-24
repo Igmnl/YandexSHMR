@@ -18,7 +18,7 @@ enum HTTPMethod: String {
 final class NetworkClient {
     static let shared = NetworkClient()
     private let baseUrl: String = "https://shmr-finance.ru/api/v1"
-    private let token: String = "YOUR_TOKEN_HERE" //Bundle.main.object(forInfoDictionaryKey: "API_TOKEN") as! String
+    private let token: String = "YOUR_TOKEN" //Bundle.main.object(forInfoDictionaryKey: "API_TOKEN") as! String
     
     func requets<T:Decodable>(method: HTTPMethod, path: String, body: Encodable? = nil) async throws ->  T {
         guard let url = URL(string: baseUrl + path) else {
@@ -71,7 +71,34 @@ final class NetworkClient {
         
         do {
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .formatted(TransactionResponse.dateFormatter)
+            decoder.dateDecodingStrategy = .custom { decoder in
+                let container = try decoder.singleValueContainer()
+                let dateString = try container.decode(String.self)
+                
+                if let date = TransactionResponse.dateFormatter.date(from: dateString) {
+                    return date
+                }
+                
+                // Fallback форматы при необходимости
+                let formats = [
+                    "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ",
+                    "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
+                    "yyyy-MM-dd"
+                ]
+                
+                for format in formats {
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = format
+                    if let date = formatter.date(from: dateString) {
+                        return date
+                    }
+                }
+                
+                throw DecodingError.dataCorruptedError(
+                    in: container,
+                    debugDescription: "Cannot decode date string \(dateString)"
+                )
+            }
             return try decoder.decode(T.self, from: data)
         } catch {
             throw NetworkError.decodingError(error)

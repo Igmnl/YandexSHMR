@@ -34,12 +34,13 @@ struct HistoryAndAnalyzeView: View {
 
 class AnalyzeCoordinator: ObservableObject {
     @Published var selectedTransaction: TransactionResponse? {
-            didSet {
-                if selectedTransaction == nil {
-                }
+        didSet {
+            if selectedTransaction == nil {
             }
         }
+    }
 }
+
 
 
 #Preview {

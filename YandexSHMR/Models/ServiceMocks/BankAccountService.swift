@@ -30,6 +30,7 @@ final class BankAccountService {
                 method: .get,
                 path: "/accounts"
             )
+            
             guard let account = accounts.first else {
                 throw NSError(domain: "No accounts found", code: 0)
             }
@@ -58,7 +59,9 @@ final class BankAccountService {
                 body: updateRequest
             )
             
+            try await syncPendingAccountUpdates()
             try await storage.saveAccount(account)
+            
             try await backupStorage.removePendingUpdates([id])
         } catch {
             let pendingUpdate = PendingAccountUpdate(
@@ -73,7 +76,6 @@ final class BankAccountService {
                 localAccount.currency = currency
                 try await storage.saveAccount(localAccount)
             }
-            
             throw error
         }
     }
