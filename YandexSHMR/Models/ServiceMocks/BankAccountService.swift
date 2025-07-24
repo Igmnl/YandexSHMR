@@ -70,6 +70,11 @@ final class BankAccountService {
                 currency: currency
             )
             try await backupStorage.savePendingUpdate(pendingUpdate)
+            if var localAccount = try await storage.getAccount() {
+                localAccount.balance = balance
+                localAccount.currency = currency
+                try await storage.saveAccount(localAccount)
+            }
             throw error
         }
     }

@@ -140,7 +140,7 @@ struct TransactionCreateView: View {
             let bankAccount = try await BankAccountService().bankAccount()
             
             let bankAccountBrief  = BankAccountBrief(id: bankAccount.id, name: bankAccount.name, balance: bankAccount.balance, currency: bankAccount.currency)
-            let transaction = TransactionResponse(id: 1, account: bankAccountBrief, category: transaction.category, amount: transaction.amount, transactionDate: transaction.transactionDate, createdAt: Date(), updatedAt: Date())
+            let transaction = TransactionResponse(id: 1, account: bankAccountBrief, category: transaction.category, amount: transaction.amount, transactionDate: transaction.transactionDate, comment: transaction.comment ?? "", createdAt: Date(), updatedAt: Date())
             
             try await service.createTransaction(transaction: transaction)
             loadingState = .loaded

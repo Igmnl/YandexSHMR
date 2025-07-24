@@ -42,6 +42,7 @@ class AnalyzeCoordinator: ObservableObject {
 }
 
 
+
 #Preview {
     HistoryAndAnalyzeView(direction: .income, service: TransactionService())
 }

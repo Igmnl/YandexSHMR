@@ -51,7 +51,7 @@ final class TransactionService {
             return merged
         }
     }
-
+    
     private func mergeAllTransactions(
         local: [TransactionResponse],
         pending: [TransactionResponse],
@@ -75,46 +75,61 @@ final class TransactionService {
             try await localStorage.createTransaction(createdTransaction)
             try await backupStorage.removePendingOperations([transaction.id])
         } catch {
+            let temporaryId = -Int.random(in: 1...Int.max)
+            let offlineTransaction = TransactionResponse(
+                id: temporaryId,
+                account: transaction.account,
+                category: transaction.category,
+                amount: transaction.amount,
+                transactionDate: transaction.transactionDate,
+                comment: transaction.comment,
+                createdAt: Date(),
+                updatedAt: Date()
+            )
+            
+            try await localStorage.createTransaction(offlineTransaction)
+            
             let operation = PendingTransactionOperation(
                 operationType: .create,
-                transaction: transaction
+                transaction: offlineTransaction
             )
             try await backupStorage.addPendingOperation(operation)
-            throw error
         }
     }
     
     func updateTransaction(transaction: TransactionResponse) async throws {
+        try await localStorage.updateTransaction(transaction)
+        
         do {
             let updatedTransaction = try await performUpdateTransaction(transaction)
             try await localStorage.updateTransaction(updatedTransaction)
             try await backupStorage.removePendingOperations([transaction.id])
         } catch {
+            
             let operation = PendingTransactionOperation(
                 operationType: .update,
                 transaction: transaction
             )
             try await backupStorage.addPendingOperation(operation)
-            throw error
         }
     }
     
     func deleteTransaction(transactionId: Int) async throws {
+        guard let transaction = try? await localStorage.getTransaction(id: transactionId) else {
+            return
+        }
+        
+        try await localStorage.deleteTransaction(id: transactionId)
+        
         do {
             try await performDeleteTransaction(transactionId)
-            try await localStorage.deleteTransaction(id: transactionId)
             try await backupStorage.removePendingOperations([transactionId])
         } catch {
-            guard let localTransaction = try? await localStorage.getTransaction(id: transactionId) else {
-                throw TransactionServiceError.transactionNotFound
-            }
-            
             let operation = PendingTransactionOperation(
                 operationType: .delete,
-                transaction: localTransaction
+                transaction: transaction
             )
             try await backupStorage.addPendingOperation(operation)
-            throw error
         }
     }
     
@@ -128,8 +143,8 @@ final class TransactionService {
         let relevantPending = pending.filter { op in
             let tx = op.transaction
             return tx.account.id == accountId &&
-                   tx.transactionDate >= startDate &&
-                   tx.transactionDate <= endDate
+            tx.transactionDate >= startDate &&
+            tx.transactionDate <= endDate
         }
         
         var createOrUpdateOps = [TransactionResponse]()
@@ -172,6 +187,7 @@ final class TransactionService {
             }
         }
     }
+    
     
     private func fetchRemoteTransactions(
         accountId: Int,
